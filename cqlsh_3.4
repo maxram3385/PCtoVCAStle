@@ -1,32 +1,51 @@
-CREATE KEYSPACE RegionalData
-WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+INSERT INTO Exports (ID, CountryExportedTo, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (1, 'Canada', 2026, 'Electronics', 500, 1.36);
 
-USE RegionalData;
+INSERT INTO Exports (ID, CountryExportedTo, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (2, 'Mexico', 2026, 'Vehicles', 300, 17.10);
 
-CREATE TABLE Exports (
-    ID int PRIMARY KEY,
-    CountryExportedTo text,
-    Year int,
-    TradeGood text,
-    Quantity int,
-    ExchangeRate decimal
-);
+INSERT INTO Exports (ID, CountryExportedTo, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (3, 'Japan', 2026, 'Machinery', 250, 147.50);
 
-CREATE TABLE Imports (
-    ID int PRIMARY KEY,
-    CountryImportedFrom text,
-    Year int,
-    TradeGood text,
-    Quantity int,
-    ExchangeRate decimal
-);
+INSERT INTO Exports (ID, CountryExportedTo, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (4, 'Germany', 2026, 'AircraftParts', 175, 0.92);
 
-CREATE TABLE Regions (
-    ID int PRIMARY KEY,
-    Name text,
-    Currency text,
-    DesiredImports text,
-    LargestExport text
-);
+INSERT INTO Exports (ID, CountryExportedTo, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (5, 'France', 2026, 'MedicalEquipment', 200, 0.92);
 
-DESCRIBE TABLES;
+
+INSERT INTO Imports (ID, CountryImportedFrom, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (1, 'China', 2026, 'Electronics', 600, 7.12);
+
+INSERT INTO Imports (ID, CountryImportedFrom, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (2, 'Canada', 2026, 'Lumber', 400, 1.36);
+
+INSERT INTO Imports (ID, CountryImportedFrom, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (3, 'Mexico', 2026, 'Produce', 350, 17.10);
+
+INSERT INTO Imports (ID, CountryImportedFrom, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (4, 'Japan', 2026, 'Automobiles', 225, 147.50);
+
+INSERT INTO Imports (ID, CountryImportedFrom, Year, TradeGood, Quantity, ExchangeRate)
+VALUES (5, 'Germany', 2026, 'Machinery', 180, 0.92);
+
+
+INSERT INTO Regions (ID, Name, Currency, DesiredImports, LargestExport)
+VALUES (1, 'North America', 'USD', 'Electronics', 'Vehicles');
+
+INSERT INTO Regions (ID, Name, Currency, DesiredImports, LargestExport)
+VALUES (2, 'Europe', 'EUR', 'Energy', 'Machinery');
+
+INSERT INTO Regions (ID, Name, Currency, DesiredImports, LargestExport)
+VALUES (3, 'Asia', 'JPY', 'Agriculture', 'Electronics');
+
+INSERT INTO Regions (ID, Name, Currency, DesiredImports, LargestExport)
+VALUES (4, 'South America', 'BRL', 'Technology', 'Agriculture');
+
+INSERT INTO Regions (ID, Name, Currency, DesiredImports, LargestExport)
+VALUES (5, 'Oceania', 'AUD', 'Vehicles', 'Minerals');
+
+
+SELECT * FROM Exports;
+SELECT * FROM Imports;
+SELECT * FROM Regions;

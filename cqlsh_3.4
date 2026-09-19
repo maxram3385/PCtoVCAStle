@@ -1,0 +1,32 @@
+CREATE KEYSPACE RegionalData
+WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+USE RegionalData;
+
+CREATE TABLE Exports (
+    ID int PRIMARY KEY,
+    CountryExportedTo text,
+    Year int,
+    TradeGood text,
+    Quantity int,
+    ExchangeRate decimal
+);
+
+CREATE TABLE Imports (
+    ID int PRIMARY KEY,
+    CountryImportedFrom text,
+    Year int,
+    TradeGood text,
+    Quantity int,
+    ExchangeRate decimal
+);
+
+CREATE TABLE Regions (
+    ID int PRIMARY KEY,
+    Name text,
+    Currency text,
+    DesiredImports text,
+    LargestExport text
+);
+
+DESCRIBE TABLES;

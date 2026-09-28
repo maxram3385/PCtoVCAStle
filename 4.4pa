@@ -1,0 +1,19 @@
+CREATE
+(:Course {
+    name: "CIS 150",
+    courseName: "Python Programming",
+    creditHours: 3,
+    termOffered: "Fall"
+}),
+(:Course {
+    name: "CIS 210",
+    courseName: "Database Management",
+    creditHours: 3,
+    termOffered: "Fall"
+}),
+(:Course {
+    name: "CIS 250",
+    courseName: "Web Development",
+    creditHours: 3,
+    termOffered: "Spring"
+});

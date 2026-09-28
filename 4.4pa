@@ -31,3 +31,158 @@ CREATE
     department: "Information Technology",
     email: "johnson@college.edu"
 });
+
+
+step 4
+
+CREATE
+(:Student {
+    name: "Alex Carter",
+    firstName: "Alex",
+    lastName: "Carter",
+    degreeProgram: "Information Technology"
+}),
+(:Student {
+    name: "Jordan Lee",
+    firstName: "Jordan",
+    lastName: "Lee",
+    degreeProgram: "Computer Science"
+}),
+(:Student {
+    name: "Taylor Smith",
+    firstName: "Taylor",
+    lastName: "Smith",
+    degreeProgram: "Information Technology"
+}),
+(:Student {
+    name: "Morgan Davis",
+    firstName: "Morgan",
+    lastName: "Davis",
+    degreeProgram: "Computer Science"
+}),
+(:Student {
+    name: "Casey Brown",
+    firstName: "Casey",
+    lastName: "Brown",
+    degreeProgram: "Information Technology"
+}),
+(:Student {
+    name: "Riley Wilson",
+    firstName: "Riley",
+    lastName: "Wilson",
+    degreeProgram: "Computer Science"
+}),
+(:Student {
+    name: "Jamie Moore",
+    firstName: "Jamie",
+    lastName: "Moore",
+    degreeProgram: "Information Technology"
+}),
+(:Student {
+    name: "Avery Taylor",
+    firstName: "Avery",
+    lastName: "Taylor",
+    degreeProgram: "Computer Science"
+}),
+(:Student {
+    name: "Cameron White",
+    firstName: "Cameron",
+    lastName: "White",
+    degreeProgram: "Information Technology"
+}),
+(:Student {
+    name: "Quinn Harris",
+    firstName: "Quinn",
+    lastName: "Harris",
+    degreeProgram: "Computer Science"
+});
+
+
+step 5
+MATCH
+(c:Course {name: "CIS 150"}),
+(s1:Student {name: "Alex Carter"}),
+(s2:Student {name: "Jordan Lee"}),
+(s3:Student {name: "Taylor Smith"}),
+(s4:Student {name: "Morgan Davis"}),
+(s5:Student {name: "Casey Brown"})
+CREATE
+(s1)-[:ENROLLED]->(c),
+(s2)-[:ENROLLED]->(c),
+(s3)-[:ENROLLED]->(c),
+(s4)-[:ENROLLED]->(c),
+(s5)-[:ENROLLED]->(c);
+
+MATCH
+(c:Course {name: "CIS 210"}),
+(s1:Student {name: "Riley Wilson"}),
+(s2:Student {name: "Jamie Moore"}),
+(s3:Student {name: "Avery Taylor"}),
+(s4:Student {name: "Cameron White"}),
+(s5:Student {name: "Quinn Harris"})
+CREATE
+(s1)-[:ENROLLED]->(c),
+(s2)-[:ENROLLED]->(c),
+(s3)-[:ENROLLED]->(c),
+(s4)-[:ENROLLED]->(c),
+(s5)-[:ENROLLED]->(c);
+
+MATCH
+(c:Course {name: "CIS 250"}),
+(s1:Student {name: "Alex Carter"}),
+(s2:Student {name: "Taylor Smith"}),
+(s3:Student {name: "Casey Brown"}),
+(s4:Student {name: "Jamie Moore"}),
+(s5:Student {name: "Cameron White"})
+CREATE
+(s1)-[:ENROLLED]->(c),
+(s2)-[:ENROLLED]->(c),
+(s3)-[:ENROLLED]->(c),
+(s4)-[:ENROLLED]->(c),
+(s5)-[:ENROLLED]->(c);
+
+step 6
+MATCH
+(i:Instructor {name: "Dr. Smith"}),
+(c1:Course {name: "CIS 150"}),
+(c2:Course {name: "CIS 210"})
+CREATE
+(i)-[:TEACHING]->(c1),
+(i)-[:TEACHING]->(c2);
+
+MATCH
+(i:Instructor {name: "Prof. Johnson"}),
+(c:Course {name: "CIS 250"})
+CREATE
+(i)-[:TEACHING]->(c);
+
+step 7
+
+MATCH (n)
+OPTIONAL MATCH (n)-[r]-()
+RETURN n, r;
+
+step 8
+MATCH (c:Course {name: "CIS 150"})-[r]-()
+WHERE type(r) IN ["TEACHING", "ENROLLED"]
+DELETE r;
+
+step 9
+MATCH (c:Course {name: "CIS 150"})
+DELETE c;
+
+step 10
+MATCH (n)
+RETURN n;
+
+step 11
+MATCH ()-[r]-()
+DELETE r;
+
+step 12
+MATCH (n)
+DELETE n;
+
+step 13
+MATCH (n)
+RETURN n;

@@ -2,8 +2,8 @@
 # Name: Max Ramos
 # Date: September 28, 2026
 # Assignment: Neo4j CRUD Application
-# Purpose: Create a Python application that performs CRUD
-# operations on a Neo4j graph database.
+# Purpose: Use Python to perform CRUD operations on a
+# Neo4j graph database.
 # ------------------------------------------------------------
 
 import json
@@ -16,246 +16,313 @@ AUTH = ("neo4j", "password1")
 driver = GraphDatabase.driver(URI, auth=AUTH)
 session = driver.session(database="neo4j")
 
-# Open JSON file
+
+# ------------------------------------------------------------
+# Import JSON data and create nodes and relationships
+# ------------------------------------------------------------
+
 with open("dataset_en_dev (3).json", "r", encoding="utf-8") as file:
-    data = [json.loads(line) for line in file]
 
-# Create nodes and relationships from JSON data
-for item in data:
+    for line in file:
 
-    session.run("""
-        MERGE (c:Category {name: $category})
-    """, category=item["product_category"])
+        item = json.loads(line)
 
-    session.run("""
-        MERGE (p:Product {name: $product})
-    """, product=item["product_id"])
+        # Create Category
+        session.run("""
+            MERGE (c:Category {name: $name})
+        """, name=item["product_category"])
 
-    session.run("""
-        MERGE (r:Review {review_id: $review_id})
-        SET r.title = $title,
-            r.content = $content,
-            r.stars = $stars
-    """,
-    review_id=item["review_id"],
-    title=item["review_title"],
-    content=item["review_body"],
-    stars=int(item["stars"]))
+        # Create Product
+        session.run("""
+            MERGE (p:Product {name: $name})
+        """, name=item["product_id"])
 
-    session.run("""
-        MERGE (u:Reviewer {name: $reviewer})
-    """, reviewer=item["reviewer_id"])
+        # Create Review
+        session.run("""
+            MERGE (r:Review {name: $name})
+            SET r.title = $title,
+                r.content = $content,
+                r.stars = $stars
+        """,
+        name=item["review_id"],
+        title=item["review_title"],
+        content=item["review_body"],
+        stars=item["stars"])
 
-    session.run("""
-        MATCH (p:Product {name: $product})
-        MATCH (c:Category {name: $category})
-        MERGE (p)-[:BELONGS_TO]->(c)
-    """,
-    product=item["product_id"],
-    category=item["product_category"])
+        # Create Reviewer
+        session.run("""
+            MERGE (u:Reviewer {name: $name})
+        """, name=item["reviewer_id"])
 
-    session.run("""
-        MATCH (p:Product {name: $product})
-        MATCH (r:Review {review_id: $review_id})
-        MERGE (p)-[:HAS_REVIEW]->(r)
-    """,
-    product=item["product_id"],
-    review_id=item["review_id"])
+        # Reviewer to Review
+        session.run("""
+            MATCH (u:Reviewer {name: $reviewer})
+            MATCH (r:Review {name: $review})
+            MERGE (u)-[:WROTE]->(r)
+        """,
+        reviewer=item["reviewer_id"],
+        review=item["review_id"])
 
-    session.run("""
-        MATCH (u:Reviewer {name: $reviewer})
-        MATCH (r:Review {review_id: $review_id})
-        MERGE (u)-[:WROTE]->(r)
-    """,
-    reviewer=item["reviewer_id"],
-    review_id=item["review_id"])
+        # Product to Category
+        session.run("""
+            MATCH (p:Product {name: $product})
+            MATCH (c:Category {name: $category})
+            MERGE (p)-[:BELONGS_TO]->(c)
+        """,
+        product=item["product_id"],
+        category=item["product_category"])
 
-print("JSON data imported successfully.")
+        # Product to Review
+        session.run("""
+            MATCH (p:Product {name: $product})
+            MATCH (r:Review {name: $review})
+            MERGE (p)-[:HAS_REVIEW]->(r)
+        """,
+        product=item["product_id"],
+        review=item["review_id"])
 
 
-# Main menu
+print("Data imported successfully!")
+
+
+# ------------------------------------------------------------
+# Main Menu
+# ------------------------------------------------------------
+
 while True:
 
-    print("\n--- Neo4j CRUD Menu ---")
-    print("1. Create Node")
-    print("2. Create Relationship")
-    print("3. Count Products by Category")
-    print("4. Count Reviews by Reviewer")
-    print("5. Update Node")
-    print("6. Delete Category")
-    print("7. Delete All Relationships")
-    print("8. Delete All Nodes")
-    print("9. Exit")
+    print("\nType in a number and press enter to execute the menu option.")
+    print("1. Create a new node")
+    print("2. Create a new relationship")
+    print("3. Count Products per Category")
+    print("4. Count Reviews per Reviewer")
+    print("5. Delete a category")
+    print("6. Delete all relationships")
+    print("7. Delete all nodes")
+    print("8. Exit the program")
 
-    choice = input("Enter selection: ")
+    choice = input()
 
-    # Create node
+
+    # --------------------------------------------------------
+    # Create a new node
+    # --------------------------------------------------------
+
     if choice == "1":
 
-        print("\n1. Category")
+        print("\nWhat kind of node do you want to create?")
+        print("1. Category")
         print("2. Product")
         print("3. Review")
         print("4. Reviewer")
 
-        node_choice = input("Select node type: ")
+        node = input()
 
-        if node_choice == "1":
-            name = input("Enter category name: ")
-            session.run("CREATE (:Category {name: $name})", name=name)
+        if node == "1":
 
-        elif node_choice == "2":
-            name = input("Enter product name: ")
-            session.run("CREATE (:Product {name: $name})", name=name)
+            name = input("Enter Category name:\n")
 
-        elif node_choice == "3":
-            review_id = input("Enter review ID: ")
-            title = input("Enter title: ")
-            content = input("Enter content: ")
-            stars = int(input("Enter stars: "))
+            session.run("""
+                CREATE (:Category {name: $name})
+            """, name=name)
+
+            print("Node Created!")
+
+        elif node == "2":
+
+            name = input("Enter Product name:\n")
+
+            session.run("""
+                CREATE (:Product {name: $name})
+            """, name=name)
+
+            print("Node Created!")
+
+        elif node == "3":
+
+            name = input("Enter Review name:\n")
+            title = input("Enter Review title:\n")
+            content = input("Enter Review content:\n")
+            stars = input("Enter Review stars:\n")
 
             session.run("""
                 CREATE (:Review {
-                    review_id: $review_id,
+                    name: $name,
                     title: $title,
                     content: $content,
                     stars: $stars
                 })
             """,
-            review_id=review_id,
+            name=name,
             title=title,
             content=content,
             stars=stars)
 
-        elif node_choice == "4":
-            name = input("Enter reviewer name: ")
-            session.run("CREATE (:Reviewer {name: $name})", name=name)
+            print("Node Created!")
 
-        print("Node created.")
+        elif node == "4":
+
+            name = input("Enter Reviewer name:\n")
+
+            session.run("""
+                CREATE (:Reviewer {name: $name})
+            """, name=name)
+
+            print("Node Created!")
+
+        else:
+            print("Invalid option.")
 
 
-    # Create relationship
+    # --------------------------------------------------------
+    # Create a new relationship
+    # --------------------------------------------------------
+
     elif choice == "2":
 
-        print("\n1. Product to Category")
+        print("\nWhat kind of relationship do you want to create?")
+        print("1. Product to Category")
         print("2. Product to Review")
 
-        rel_choice = input("Select relationship: ")
+        relationship_choice = input()
 
-        if rel_choice == "1":
+        if relationship_choice == "1":
 
-            product = input("Enter product name: ")
-            category = input("Enter category name: ")
+            product = input("Enter the name of the Product to connect:\n")
+            category = input("Enter the name of the Category to connect:\n")
+            relationship = input("Enter the name of the Relationship:\n")
 
-            session.run("""
-                MATCH (p:Product {name: $product})
-                MATCH (c:Category {name: $category})
-                MERGE (p)-[:BELONGS_TO]->(c)
-            """,
-            product=product,
-            category=category)
+            # Remove spaces from relationship name
+            relationship = relationship.replace(" ", "_")
 
-        elif rel_choice == "2":
+            query = f"""
+                MATCH (p:Product {{name: $product}})
+                MATCH (c:Category {{name: $category}})
+                CREATE (p)-[:{relationship}]->(c)
+            """
 
-            product = input("Enter product name: ")
-            review_id = input("Enter review ID: ")
+            session.run(
+                query,
+                product=product,
+                category=category
+            )
 
-            session.run("""
-                MATCH (p:Product {name: $product})
-                MATCH (r:Review {review_id: $review_id})
-                MERGE (p)-[:HAS_REVIEW]->(r)
-            """,
-            product=product,
-            review_id=review_id)
+            print("\nRelationship Created!")
 
-        print("Relationship created.")
+        elif relationship_choice == "2":
+
+            product = input("Enter the name of the Product to connect:\n")
+            review = input("Enter the name of the Review to connect:\n")
+            relationship = input("Enter the name of the Relationship:\n")
+
+            relationship = relationship.replace(" ", "_")
+
+            query = f"""
+                MATCH (p:Product {{name: $product}})
+                MATCH (r:Review {{name: $review}})
+                CREATE (p)-[:{relationship}]->(r)
+            """
+
+            session.run(
+                query,
+                product=product,
+                review=review
+            )
+
+            print("\nRelationship Created!")
+
+        else:
+            print("Invalid option.")
 
 
-    # Count products by category
+    # --------------------------------------------------------
+    # Count Products per Category
+    # --------------------------------------------------------
+
     elif choice == "3":
 
-        category = input("Enter category name: ")
+        category = input("Enter Category name:\n")
 
         result = session.run("""
-            MATCH (p:Product)-[:BELONGS_TO]->(c:Category {name: $category})
+            MATCH (p:Product)-[]->(c:Category {name: $category})
             RETURN count(p) AS total
         """, category=category)
 
-        print("Product count:", result.single()["total"])
+        print("Product Count:", result.single()["total"])
 
 
-    # Count reviews by reviewer
+    # --------------------------------------------------------
+    # Count Reviews per Reviewer
+    # --------------------------------------------------------
+
     elif choice == "4":
 
-        reviewer = input("Enter reviewer name: ")
+        reviewer = input("Enter Reviewer name:\n")
 
         result = session.run("""
-            MATCH (u:Reviewer {name: $reviewer})-[:WROTE]->(r:Review)
+            MATCH (u:Reviewer {name: $reviewer})-[]->(r:Review)
             RETURN count(r) AS total
         """, reviewer=reviewer)
 
-        print("Review count:", result.single()["total"])
+        print("Review Count:", result.single()["total"])
 
 
-    # Update node
+    # --------------------------------------------------------
+    # Delete a Category
+    # --------------------------------------------------------
+
     elif choice == "5":
 
-        old_name = input("Enter current category name: ")
-        new_name = input("Enter new category name: ")
-
-        session.run("""
-            MATCH (c:Category {name: $old_name})
-            SET c.name = $new_name
-        """,
-        old_name=old_name,
-        new_name=new_name)
-
-        print("Category updated.")
-
-
-    # Delete category
-    elif choice == "6":
-
-        category = input("Enter category name to delete: ")
+        category = input("Enter Category name to delete:\n")
 
         session.run("""
             MATCH (c:Category {name: $category})
             DETACH DELETE c
         """, category=category)
 
-        print("Category deleted.")
+        print("Category Deleted!")
 
 
+    # --------------------------------------------------------
     # Delete all relationships
-    elif choice == "7":
+    # --------------------------------------------------------
+
+    elif choice == "6":
 
         session.run("""
             MATCH ()-[r]-()
             DELETE r
         """)
 
-        print("All relationships deleted.")
+        print("All Relationships Deleted!")
 
 
+    # --------------------------------------------------------
     # Delete all nodes
-    elif choice == "8":
+    # --------------------------------------------------------
+
+    elif choice == "7":
 
         session.run("""
             MATCH (n)
             DETACH DELETE n
         """)
 
-        print("All nodes deleted.")
+        print("All Nodes Deleted!")
 
 
+    # --------------------------------------------------------
     # Exit
-    elif choice == "9":
+    # --------------------------------------------------------
 
+    elif choice == "8":
+
+        print("Program Closed.")
         break
 
     else:
-        print("Invalid selection.")
+        print("Invalid option.")
 
 
 session.close()
 driver.close()
-print("Program closed.")

@@ -21,7 +21,7 @@ session = driver.session(database="neo4j")
 # Import JSON data and create nodes and relationships
 # ------------------------------------------------------------
 
-with open("dataset_en_dev (3).json", "r", encoding="utf-8") as file:
+with open("dataset_en_dev.json", "r", encoding="utf-8") as file:
 
     for line in file:
 

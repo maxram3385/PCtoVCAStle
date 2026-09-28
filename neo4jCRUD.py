@@ -11,7 +11,7 @@ from neo4j import GraphDatabase
 
 # Connect to Neo4j
 URI = "neo4j://127.0.0.1:7687"
-AUTH = ("neo4j", "YOUR_PASSWORD")
+AUTH = ("neo4j", "password1")
 
 driver = GraphDatabase.driver(URI, auth=AUTH)
 session = driver.session(database="neo4j")

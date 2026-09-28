@@ -1,3 +1,8 @@
+# Max Ramos
+# Date: 9/27/2026
+# Assignment: Guided Practice - Python Application Accessing a Graph Database
+# Objective: Create a Python application that uses basic CRUD operations on a Neo4j graph database.
+
 import json
 from neo4j import GraphDatabase
 

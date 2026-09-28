@@ -17,3 +17,17 @@ CREATE
     creditHours: 3,
     termOffered: "Spring"
 });
+
+
+
+CREATE
+(:Instructor {
+    name: "Dr. Smith",
+    department: "Computer Science",
+    email: "smith@college.edu"
+}),
+(:Instructor {
+    name: "Prof. Johnson",
+    department: "Information Technology",
+    email: "johnson@college.edu"
+});

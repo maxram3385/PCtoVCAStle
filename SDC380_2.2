@@ -35,3 +35,24 @@ count_after = unique_countries = df_cleaned['Country or region'].value_counts()
 replaced_count = sum((count_before - count_after).fillna(0))
 display(Markdown(f"### {student_id} - {todays_date}")) #display Header Text
 display(Markdown(f"**{int(replaced_count)} entries were replaced.**"))
+
+
+task 3
+#finding Missing Values
+missing_values_before = df.isnull().sum()
+display(Markdown(f"## {student_id} – {todays_date}")) #display Header
+Text
+display(Markdown("## Number of missing values in each column"))
+display(missing_values_before)
+#Fill in missing values with the median of the row. Median because it
+is less sensitive to outliers
+for col in missing_values_before.index:
+if missing_values_before[col] > 0:
+median_value = df_cleaned[col].median() #Get the median of
+the column where the missing value is
+df_cleaned[col].fillna(median_value, inplace=True) #Fill
+the missing value with the median
+missing_values_after = df_cleaned.isnull().sum()
+display(Markdown("## Number of missing values in each column after
+filling with median"))
+display(missing_values_after)

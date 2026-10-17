@@ -30,3 +30,29 @@ print("Correlation between Happiness Score and Life Expectancy:", correlation_ha
 print("Minimum Happiness Score:", min_happiness_score)
 print("Maximum Happiness Score:", max_happiness_score)
 print("25th Percentile of Freedom Scores:", freedom_25th_percentile)
+
+
+
+task 2
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from datetime import datetime
+
+student_id = "maxram3385"
+
+# Load the dataset into a new DataFrame
+df_new = pd.read_excel('C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_Task2.xlsx')
+
+# Get current date and time
+current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+plt.figure(figsize=(10, 6))
+plt.hist(df_new['Score'], bins=20, color='skyblue', edgecolor='black')
+plt.xlabel('Happiness Score')
+plt.ylabel('Number of Countries')
+plt.title(f'Histogram of Number of Countries vs. Happiness Score - StudentID: {student_id} - {current_datetime}')
+plt.grid(True)
+plt.show()

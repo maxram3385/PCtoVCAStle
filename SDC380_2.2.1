@@ -67,3 +67,20 @@ plt.title(f'Top 10 Countries by Happiness Score - StudentID: {student_id} - {cur
 plt.gca().invert_yaxis()
 plt.grid(True)
 plt.show()
+
+
+task 4:
+x = df_new['GDP per capita']
+y = df_new['Score']
+z = np.polyfit(x, y, 1)
+p = np.poly1d(z)
+
+plt.figure(figsize=(12, 8))
+plt.scatter(x, y, label='Data Points', color='blue')
+plt.plot(x, p(x), label=f'Trendline: y = {z[0]:.2f}x + {z[1]:.2f}', color='red')
+plt.xlabel('GDP per Capita')
+plt.ylabel('Happiness Score')
+plt.title(f'Happiness Score vs GDP per Capita with Trendline - StudentID: {student_id} - {current_datetime}')
+plt.legend()
+plt.grid(True)
+plt.show()

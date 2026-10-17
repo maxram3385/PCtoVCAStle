@@ -1,0 +1,32 @@
+from datetime import datetime
+import pandas as pd
+from IPython.display import display, Markdown
+
+# Load the dataset into a new DataFrame
+df_new = pd.read_excel('C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_Task2.xlsx')
+import pandas as pd #import pandas library
+todays_date = datetime.now().strftime("%Y-%m-%d")
+student_id = "maxram3385"
+display(Markdown(f"### {student_id} – {todays_date}")) #display Header Text
+
+mean_happiness_score = df_new['Score'].mean() #Mean Happiness Score
+std_happiness_score = df_new['Score'].std() #Standard Deviation
+median_happiness_score = df_new['Score'].median() #Median Happiness Score
+
+#Calculate Correlation between Happiness Score and Life Expectancy
+correlation_happiness_life_expectancy = df_new['Score'].corr(df_new['Healthy life expectancy'])
+
+min_happiness_score = df_new['Score'].min() #Calculate Minimum Happiness Score
+max_happiness_score = df_new['Score'].max() #Calculate Maximum Happiness Score
+
+#Calculate 25th Percentile of Freedom Scores
+freedom_25th_percentile = df_new['Freedom to make life choices'].quantile(0.25)
+
+#Display Calculated Statistics
+print("Mean Happiness Score:", mean_happiness_score)
+print("Standard Deviation of Happiness Score:", std_happiness_score)
+print("Median Happiness Score:", median_happiness_score)
+print("Correlation between Happiness Score and Life Expectancy:", correlation_happiness_life_expectancy)
+print("Minimum Happiness Score:", min_happiness_score)
+print("Maximum Happiness Score:", max_happiness_score)
+print("25th Percentile of Freedom Scores:", freedom_25th_percentile)

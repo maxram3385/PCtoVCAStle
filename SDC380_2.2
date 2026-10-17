@@ -1,0 +1,21 @@
+from IPython.display import display, Markdown
+from datetime import datetime
+import pandas as pd #import pandas library
+todays_date = datetime.now().strftime("%Y-%m-%d")
+student_id = "StudentID"
+file_path =
+'C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_Task1.xlsx'
+df = pd.read_excel(file_path)
+duplicate_rows_before = df[df.duplicated()] #find duplicated rows
+display(Markdown(f"### {student_id} – {todays_date}")) #display
+Header Text
+display(Markdown("## Duplicate Rows before cleaning")) #display
+Header Text
+display(duplicate_rows_before) #display # of duplicated rows
+df_cleaned = df.copy() #Make copy of data frame
+df_cleaned.drop_duplicates(inplace=True) #delete duplicates
+duplicate_rows_after = df_cleaned[ df_cleaned.duplicated()] #find
+duplicated rows
+display(Markdown("## Duplicate Rows after cleaning")) #display Header
+Text
+display(duplicate_rows_after) #display rows after cleaning

@@ -1,0 +1,249 @@
+# Task 1:
+
+Load libraries and dataset
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from datetime import datetime
+from IPython.display import display, Markdown
+
+student_id = "maxram3385"
+current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+file_path = r"C:\Files\Excel\DA_PythonR\AirBnBSummary_v2.xlsx"
+df = pd.read_excel(file_path)
+
+# Remove the empty student ID placeholder column
+df = df.drop(columns=['<StudentID>'])
+
+df_cleaned = df.copy()
+
+display(Markdown(f"### {student_id} - {current_datetime}"))
+
+
+# Task 2: 
+
+Remove duplicate entries
+display(Markdown("## Task 2: Duplicate Entries"))
+
+duplicate_rows_before = df_cleaned.duplicated().sum()
+df_cleaned = df_cleaned.drop_duplicates().copy()
+duplicate_rows_after = df_cleaned.duplicated().sum()
+
+print("Duplicate entries before cleaning:", duplicate_rows_before)
+print("Duplicate entries after cleaning:", duplicate_rows_after)
+
+
+# Task 3:
+
+
+Replace Private room with Private Room
+display(Markdown("## Task 3: Correct Room Types"))
+
+replaced_count = (df_cleaned['room_type'] == 'Private room').sum()
+
+df_cleaned['room_type'] = df_cleaned['room_type'].replace(
+    {'Private room': 'Private Room'}
+)
+
+print(f"{replaced_count} entries were replaced.")
+display(df_cleaned['room_type'].value_counts())
+
+
+# Task 4:
+
+
+Fill missing numeric values with the column median
+display(Markdown("## Task 4: Missing Values"))
+
+missing_values_before = df_cleaned.isnull().sum()
+
+display(Markdown("### Missing values before cleaning"))
+display(missing_values_before)
+
+numerical_columns = [
+    'price',
+    'minimum_nights',
+    'number_of_reviews',
+    'availability_365'
+]
+
+for col in numerical_columns:
+    median_value = df_cleaned[col].median()
+    df_cleaned[col] = df_cleaned[col].fillna(median_value)
+
+display(Markdown("### Missing values after cleaning"))
+display(df_cleaned.isnull().sum())
+
+
+# Task 5: 
+
+
+Remove outlier rows using 1.5 * IQR
+display(Markdown("## Task 5: Remove Outliers"))
+
+Q1 = df_cleaned[numerical_columns].quantile(0.25)
+Q3 = df_cleaned[numerical_columns].quantile(0.75)
+IQR = Q3 - Q1
+
+outlier_mask = (
+    (df_cleaned[numerical_columns] < (Q1 - 1.5 * IQR))
+    | (df_cleaned[numerical_columns] > (Q3 + 1.5 * IQR))
+).any(axis=1)
+
+print("Rows before removing outliers:", len(df_cleaned))
+print("Outlier rows removed:", outlier_mask.sum())
+
+df_cleaned = df_cleaned.loc[~outlier_mask].copy()
+
+print("Rows after removing outliers:", len(df_cleaned))
+
+
+# Task 6:
+
+
+
+Save the cleaned dataset
+cleaned_file_path = (
+    r"C:\Files\Excel\DA_PythonR\AirBnBSummary_v2_Python_Cleaned.xlsx"
+)
+
+df_cleaned.to_excel(cleaned_file_path, index=False)
+
+display(Markdown("## Task 6: Save Cleaned Dataset"))
+print("Cleaned dataset saved to:", cleaned_file_path)
+
+
+# Task 7: 
+
+
+
+Display descriptive statistics
+display(Markdown(f"## Task 7: Statistics - {student_id} - {current_datetime}"))
+
+print("Total count of listings:", len(df_cleaned))
+print("Minimum price:", df_cleaned['price'].min())
+print("Maximum price:", df_cleaned['price'].max())
+print("Mean price of listings:", df_cleaned['price'].mean())
+print("Median number_of_reviews:", df_cleaned['number_of_reviews'].median())
+print("Mode minimum_nights:", df_cleaned['minimum_nights'].mode().tolist())
+print("Standard deviation of price:", df_cleaned['price'].std())
+
+correlation_price_availability = df_cleaned['price'].corr(
+    df_cleaned['availability_365']
+)
+
+print(
+    "Correlation between price and availability_365:",
+    correlation_price_availability
+)
+
+
+# Task 8: 
+
+
+Histogram of number_of_reviews
+plt.figure(figsize=(10, 6))
+plt.hist(
+    df_cleaned['number_of_reviews'],
+    bins=20,
+    color='skyblue',
+    edgecolor='black'
+)
+plt.xlabel('Number of Reviews')
+plt.ylabel('Number of Listings')
+plt.title(
+    f'Histogram of Number of Reviews\n'
+    f'{student_id} - {current_datetime}'
+)
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+
+# Task 9:
+
+
+Bar chart of minimum_nights
+minimum_nights_counts = (
+    df_cleaned['minimum_nights'].value_counts().sort_index()
+)
+
+plt.figure(figsize=(12, 8))
+plt.bar(
+    minimum_nights_counts.index.astype(str),
+    minimum_nights_counts.values,
+    color='green'
+)
+plt.xlabel('Minimum Nights')
+plt.ylabel('Number of Listings')
+plt.title(
+    f'Number of Listings by Minimum Nights\n'
+    f'{student_id} - {current_datetime}'
+)
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+
+# Task 10: 
+
+
+Scatter plot of availability_365 and price with trendline
+x = df_cleaned['availability_365']
+y = df_cleaned['price']
+
+z = np.polyfit(x, y, 1)
+p = np.poly1d(z)
+x_line = np.linspace(x.min(), x.max(), 100)
+
+plt.figure(figsize=(12, 8))
+plt.scatter(x, y, label='Data Points', color='blue', alpha=0.5)
+plt.plot(
+    x_line,
+    p(x_line),
+    label=f'Trendline: y = {z[0]:.2f}x + {z[1]:.2f}',
+    color='red'
+)
+plt.xlabel('Availability (Days per Year)')
+plt.ylabel('Price')
+plt.title(
+    f'Price vs Availability with Trendline\n'
+    f'{student_id} - {current_datetime}'
+)
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+
+# Task 11:
+
+
+Correlation heatmap
+selected_columns = [
+    'price',
+    'minimum_nights',
+    'number_of_reviews',
+    'availability_365'
+]
+
+correlation_matrix = df_cleaned[selected_columns].corr()
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(
+    correlation_matrix,
+    annot=True,
+    cmap='coolwarm',
+    fmt=".2f",
+    vmin=-1,
+    vmax=1,
+    center=0
+)
+plt.title(
+    f'Heatmap of Correlations\n'
+    f'{student_id} - {current_datetime}'
+)
+plt.tight_layout()
+plt.show()

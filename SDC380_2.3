@@ -1,97 +1,115 @@
+# TASK 1: Remove duplicate rows
+
 library(writexl)
-library(readxl)
-library(dplyr)
-library(IRdisplay)
+library(readxl) #Load the readxl Library for Excel Files
+library(dplyr) #Load the dplyr for data manipulation and transformation
+library(IRdisplay) #Load the IRDisplay library to help interact with Jupyter notebooks
 
 # Variables
 todays_date <- format(Sys.Date(), "%Y-%m-%d")
 student_id <- "maxram3385"
 
-# TASK 1: Remove duplicate rows
-
+# Read the Excel file into a data frame
 file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1.xlsx"
 df <- read_excel(file_path)
 
 # Find duplicate rows before cleaning
 duplicate_rows_before <- df[duplicated(df), ]
 
+# Display Header Text
 display_markdown(paste("###", student_id, "-", todays_date))
+
+# Display duplicate rows before cleaning
 display_markdown("### Duplicate Rows before cleaning")
 display(duplicate_rows_before)
 
-# Make a copy and remove duplicates
+# Make a copy of the data frame and remove duplicates
 df_cleaned <- df
 df_cleaned <- df_cleaned %>% distinct()
 
 # Find duplicate rows after cleaning
 duplicate_rows_after <- df_cleaned[duplicated(df_cleaned), ]
 
+# Display duplicate rows after cleaning
 display_markdown("### Duplicate Rows after cleaning")
 display(duplicate_rows_after)
 
 
 # TASK 2: Correct misspelled countries
 
+# Count countries before cleaning
 count_before <- table(df$`Country or region`)
 
+# Manually identified misspelled countries and their corrections
 misspellings_correction <- c(
     'Icleand' = 'Iceland',
     'Swtierland' = 'Switzerland',
     'Canda' = 'Canada'
 )
 
-df_cleaned$`Country or region` <- as.character(
-    df_cleaned$`Country or region`
-)
+# Convert to character type
+df_cleaned$`Country or region` <- as.character(df_cleaned$`Country or region`)
 
 # Count entries that will be replaced
 replaced_count <- sum(
     df_cleaned$`Country or region` %in% names(misspellings_correction)
 )
 
-# Replace misspelled countries
+# Replace misspelled countries in the cleaned data frame
 df_cleaned$`Country or region` <- ifelse(
     df_cleaned$`Country or region` %in% names(misspellings_correction),
     misspellings_correction[df_cleaned$`Country or region`],
     df_cleaned$`Country or region`
 )
 
+# Count countries after cleaning
 count_after <- table(df_cleaned$`Country or region`)
 
+# Display Header Text
 display_markdown(paste("###", student_id, "-", todays_date))
+
+# Display the number of replaced entries
 display_markdown(paste("**", replaced_count, "entries were replaced.**"))
 
 
-# TASK 3: Fill missing numerical values with column medians
+# TASK 3: Fill missing values
 
+# Find the number of missing values in each column before filling
 missing_values_before <- sapply(df, function(x) sum(is.na(x)))
 
+# Display Header Text
 display_markdown(paste("###", student_id, "-", todays_date))
+
+# Display the number of missing values in each column
 display_markdown("### Number of missing values in each column")
 display(missing_values_before)
 
-# Apply median replacement to numerical columns
+# Fill missing numerical values with the median of each column
+# Median is less sensitive to outliers
 df_cleaned <- df_cleaned %>%
     mutate(across(
         where(is.numeric),
         ~ ifelse(is.na(.), median(., na.rm = TRUE), .)
     ))
 
-missing_values_after <- sapply(
-    df_cleaned,
-    function(x) sum(is.na(x))
-)
+# Find the number of missing values in each column after filling
+missing_values_after <- sapply(df_cleaned, function(x) sum(is.na(x)))
 
+# Display the number of missing values after filling
 display_markdown("### Number of missing values in each column after filling with median")
 display(missing_values_after)
 
 
-# TASK 4: Find and replace outliers using 3.5 * IQR
+# TASK 4: Find and replace outliers
 
+# Initialize lists to store outliers and their positions in cleaned data
 outliers <- list()
 cleaned_outlier_indices <- list()
+
+# Identify numerical columns
 numerical_columns <- names(df)[sapply(df, is.numeric)]
 
+# Find outliers using the 3.5 * IQR method
 for (col in numerical_columns) {
     Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
     Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
@@ -100,19 +118,21 @@ for (col in numerical_columns) {
     lower_bound <- Q1 - 3.5 * IQR
     upper_bound <- Q3 + 3.5 * IQR
 
-    # Find original outliers, excluding missing values
     outliers[[col]] <- df[
         which(df[[col]] < lower_bound | df[[col]] > upper_bound),
     ]
 
-    # Locate outliers in the cleaned data after duplicate removal
+    # Locate matching outlier positions after duplicate removal
     cleaned_outlier_indices[[col]] <- which(
         df_cleaned[[col]] < lower_bound |
         df_cleaned[[col]] > upper_bound
     )
 }
 
+# Display Header Text
 display_markdown(paste("###", student_id, "-", todays_date))
+
+# Display outliers
 display_markdown("### Outliers")
 
 for (col in names(outliers)) {
@@ -122,7 +142,7 @@ for (col in names(outliers)) {
     }
 }
 
-# Replace outliers with the median of each column
+# Handle outliers by replacing them with the median of each column
 display_markdown("**After cleaning:**")
 
 for (col in names(outliers)) {
@@ -138,10 +158,8 @@ for (col in names(outliers)) {
 }
 
 
-# TASK 5: Save the cleaned dataset
+# TASK 5: Save the cleaned data
 
-cleaned_file_path_35 <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1_Cleaned.xlsx"
-
-write_xlsx(df_cleaned, cleaned_file_path_35)
-
-display_markdown(paste("**Cleaned file saved to:**", cleaned_file_path_35))
+# Save the cleaned DataFrame to an Excel file
+cleaned_file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1_Cleaned_R.xlsx"
+write_xlsx(df_cleaned, cleaned_file_path)

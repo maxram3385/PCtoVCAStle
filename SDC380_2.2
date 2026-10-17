@@ -23,20 +23,21 @@ display(duplicate_rows_after) #display rows after cleaning
 
 
 task2:
-count_before = unique_countries = df['Country or
-region'].value_counts() #count countries
-misspelled_countries = ['Icleand', 'Swtierland', 'Canda'] # Manually
-identified Correcting Misspellings
+count_before = unique_countries = df['Country or region'].value_counts() #count countries
+
+misspelled_countries = ['Icleand', 'Swtierland', 'Canda'] # Manually identified Correcting Misspellings
+
 misspellings_correction = {
-'Icleand': 'Iceland',
-'Swtierland': 'Switzerland',
-'Canda': 'Canada'
+    'Icleand': 'Iceland',
+    'Swtierland': 'Switzerland',
+    'Canda': 'Canada'
 }
-df_cleaned['Country or region'].replace(misspellings_correction,
-inplace=True) #Search/replace in "cleaned" dataset
-count_after = unique_countries = df_cleaned['Country or region']
-.value_counts()
+
+df_cleaned['Country or region'].replace(misspellings_correction, inplace=True) #Search/replace in "cleaned" dataset
+
+count_after = unique_countries = df_cleaned['Country or region'].value_counts()
+
 replaced_count = sum((count_before - count_after).fillna(0))
-display(Markdown(f"### {student_id} - {todays_date}")) #display
-Header Text
+
+display(Markdown(f"### {student_id} - {todays_date}")) #display Header Text
 display(Markdown(f"**{int(replaced_count)} entries were replaced.**"))

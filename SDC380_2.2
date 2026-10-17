@@ -85,3 +85,8 @@ for col in outliers.keys():
         df_cleaned.loc[outlier_indices, col] = median_value
         display(Markdown(f"**{col}:**"))
         display(df_cleaned.loc[outlier_indices, col])
+
+
+Task 5:
+cleaned_file_path_35 = 'C:\\Files\\Excel\\DA_PythonR\\2019_Happiness_Index_v2_Task1_Cleaned.xlsx'
+df_cleaned.to_excel(cleaned_file_path_35, index=False)

@@ -53,3 +53,35 @@ for col in missing_values_before.index:
 missing_values_after = df_cleaned.isnull().sum()
 display(Markdown("## Number of missing values in each column after filling with median"))
 display(missing_values_after)
+
+
+
+task4:
+
+#Finding Outliers using 3.5 * IQR method
+outliers = {}
+numerical_columns = df.select_dtypes(include=['float64', 'int64']).columns #Find numerical data types
+
+for col in numerical_columns:
+    Q1 = df[col].quantile(0.25) #Calculate Q1
+    Q3 = df[col].quantile(0.75) #Calculate Q3
+    IQR = Q3 - Q1
+    outliers[col] = df[(df[col] < (Q1 - 3.5 * IQR)) | (df[col] > (Q3 + 3.5 * IQR))]
+
+display(Markdown(f"## {student_id} - {todays_date}")) #display Header text
+display(Markdown("## Outliers"))
+
+for col, outlier_df in outliers.items():
+    if not outlier_df.empty:
+        display(Markdown(f"**{col}:**"))
+        display(outlier_df[col])
+
+display(Markdown("**After cleaning:**"))
+
+for col in outliers.keys():
+    if not outliers[col].empty:
+        median_value = df_cleaned[col].median()
+        outlier_indices = outliers[col].index
+        df_cleaned.loc[outlier_indices, col] = median_value
+        display(Markdown(f"**{col}:**"))
+        display(df_cleaned.loc[outlier_indices, col])

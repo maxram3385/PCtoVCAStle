@@ -84,3 +84,11 @@ plt.title(f'Happiness Score vs GDP per Capita with Trendline - StudentID: {stude
 plt.legend()
 plt.grid(True)
 plt.show()
+
+task 5:
+selected_columns = ['Score', 'GDP per capita', 'Social support', 'Generosity']
+correlation_matrix = df_new[selected_columns].corr()
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+plt.title(f'Heatmap of Correlations - StudentID: {student_id} - {current_datetime}')
+plt.show()

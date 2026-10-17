@@ -1,0 +1,147 @@
+library(writexl)
+library(readxl)
+library(dplyr)
+library(IRdisplay)
+
+# Variables
+todays_date <- format(Sys.Date(), "%Y-%m-%d")
+student_id <- "maxram3385"
+
+# TASK 1: Remove duplicate rows
+
+file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1.xlsx"
+df <- read_excel(file_path)
+
+# Find duplicate rows before cleaning
+duplicate_rows_before <- df[duplicated(df), ]
+
+display_markdown(paste("###", student_id, "-", todays_date))
+display_markdown("### Duplicate Rows before cleaning")
+display(duplicate_rows_before)
+
+# Make a copy and remove duplicates
+df_cleaned <- df
+df_cleaned <- df_cleaned %>% distinct()
+
+# Find duplicate rows after cleaning
+duplicate_rows_after <- df_cleaned[duplicated(df_cleaned), ]
+
+display_markdown("### Duplicate Rows after cleaning")
+display(duplicate_rows_after)
+
+
+# TASK 2: Correct misspelled countries
+
+count_before <- table(df$`Country or region`)
+
+misspellings_correction <- c(
+    'Icleand' = 'Iceland',
+    'Swtierland' = 'Switzerland',
+    'Canda' = 'Canada'
+)
+
+df_cleaned$`Country or region` <- as.character(
+    df_cleaned$`Country or region`
+)
+
+# Count entries that will be replaced
+replaced_count <- sum(
+    df_cleaned$`Country or region` %in% names(misspellings_correction)
+)
+
+# Replace misspelled countries
+df_cleaned$`Country or region` <- ifelse(
+    df_cleaned$`Country or region` %in% names(misspellings_correction),
+    misspellings_correction[df_cleaned$`Country or region`],
+    df_cleaned$`Country or region`
+)
+
+count_after <- table(df_cleaned$`Country or region`)
+
+display_markdown(paste("###", student_id, "-", todays_date))
+display_markdown(paste("**", replaced_count, "entries were replaced.**"))
+
+
+# TASK 3: Fill missing numerical values with column medians
+
+missing_values_before <- sapply(df, function(x) sum(is.na(x)))
+
+display_markdown(paste("###", student_id, "-", todays_date))
+display_markdown("### Number of missing values in each column")
+display(missing_values_before)
+
+# Apply median replacement to numerical columns
+df_cleaned <- df_cleaned %>%
+    mutate(across(
+        where(is.numeric),
+        ~ ifelse(is.na(.), median(., na.rm = TRUE), .)
+    ))
+
+missing_values_after <- sapply(
+    df_cleaned,
+    function(x) sum(is.na(x))
+)
+
+display_markdown("### Number of missing values in each column after filling with median")
+display(missing_values_after)
+
+
+# TASK 4: Find and replace outliers using 3.5 * IQR
+
+outliers <- list()
+cleaned_outlier_indices <- list()
+numerical_columns <- names(df)[sapply(df, is.numeric)]
+
+for (col in numerical_columns) {
+    Q1 <- quantile(df[[col]], 0.25, na.rm = TRUE)
+    Q3 <- quantile(df[[col]], 0.75, na.rm = TRUE)
+    IQR <- Q3 - Q1
+
+    lower_bound <- Q1 - 3.5 * IQR
+    upper_bound <- Q3 + 3.5 * IQR
+
+    # Find original outliers, excluding missing values
+    outliers[[col]] <- df[
+        which(df[[col]] < lower_bound | df[[col]] > upper_bound),
+    ]
+
+    # Locate outliers in the cleaned data after duplicate removal
+    cleaned_outlier_indices[[col]] <- which(
+        df_cleaned[[col]] < lower_bound |
+        df_cleaned[[col]] > upper_bound
+    )
+}
+
+display_markdown(paste("###", student_id, "-", todays_date))
+display_markdown("### Outliers")
+
+for (col in names(outliers)) {
+    if (nrow(outliers[[col]]) > 0) {
+        display_markdown(paste("**", col, ":**"))
+        display(outliers[[col]][col])
+    }
+}
+
+# Replace outliers with the median of each column
+display_markdown("**After cleaning:**")
+
+for (col in names(outliers)) {
+    outlier_indices <- cleaned_outlier_indices[[col]]
+
+    if (length(outlier_indices) > 0) {
+        median_value <- median(df_cleaned[[col]], na.rm = TRUE)
+        df_cleaned[outlier_indices, col] <- median_value
+
+        display_markdown(paste("**", col, ":**"))
+        display(df_cleaned[outlier_indices, col])
+    }
+}
+
+
+# TASK 5: Save the cleaned dataset
+
+cleaned_file_path_35 <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task1_Cleaned.xlsx"
+
+write_xlsx(df_cleaned, cleaned_file_path_35)
+
+display_markdown(paste("**Cleaned file saved to:**", cleaned_file_path_35))

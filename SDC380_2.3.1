@@ -1,0 +1,163 @@
+# TASK 1: Calculate descriptive statistics
+
+library(readxl)
+library(IRdisplay)
+
+# Variables
+todays_date <- format(Sys.Date(), "%Y-%m-%d")
+student_id <- "maxram3385"
+
+# Read the Excel file into a data frame
+file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+
+# Display Header Text
+display_markdown(paste("###", student_id, "-", todays_date))
+
+# Calculate Mean Happiness Score
+mean_happiness_score <- mean(df_new$Score, na.rm = TRUE)
+
+# Calculate Standard Deviation of Happiness Score
+std_happiness_score <- sd(df_new$Score, na.rm = TRUE)
+
+# Calculate Median Happiness Score
+median_happiness_score <- median(df_new$Score, na.rm = TRUE)
+
+# Calculate Correlation between Happiness Score and Life Expectancy
+correlation_happiness_life_expectancy <- cor(
+    df_new$Score,
+    df_new$`Healthy life expectancy`,
+    use = "pairwise.complete.obs"
+)
+
+# Calculate Minimum Happiness Score
+min_happiness_score <- min(df_new$Score, na.rm = TRUE)
+
+# Calculate Maximum Happiness Score
+max_happiness_score <- max(df_new$Score, na.rm = TRUE)
+
+# Calculate 25th percentile of Freedom Scores
+freedom_25th_percentile <- quantile(
+    df_new$`Freedom to make life choices`,
+    0.25,
+    na.rm = TRUE
+)
+
+# Display Calculated Statistics
+print(paste("Mean Happiness Score:", mean_happiness_score))
+print(paste("Standard Deviation of Happiness Score:", std_happiness_score))
+print(paste("Median Happiness Score:", median_happiness_score))
+print(paste("Correlation between Happiness Score and Life Expectancy:", correlation_happiness_life_expectancy))
+print(paste("Minimum Happiness Score:", min_happiness_score))
+print(paste("Maximum Happiness Score:", max_happiness_score))
+print(paste("25th Percentile of Freedom Scores:", freedom_25th_percentile))
+
+
+# TASK 2: Histogram
+
+# Load required libraries if not already loaded
+library(readxl) #Read excel files
+library(ggplot2) #Visualization package for R
+library(dplyr) #Data manipulation and transformation in R
+library(corrplot) #Visualization of correlation matrices
+
+# Variables
+student_id <- "maxram3385"
+
+# Read the Excel file into a data frame
+file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+# Histogram of Number of Countries vs Happiness Score
+ggplot(df_new, aes(x = Score)) +
+    geom_histogram(binwidth = 0.2, fill = "skyblue", color = "black") +
+    xlab("Happiness Score") +
+    ylab("Number of Countries") +
+    ggtitle(paste("Histogram of Number of Countries vs Happiness Score - Student ID:", student_id, "-", current_datetime)) +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(colour = "grey"))
+
+
+# TASK 3: Top 10 countries bar chart
+
+# Variables
+student_id <- "maxram3385"
+
+# Read the Excel file into a data frame
+file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+# Select Top 10 Countries by Happiness Score
+top_10_countries <- df_new %>% arrange(desc(Score)) %>% head(10)
+
+# Bar Chart for Top 10 Countries by Happiness Score
+ggplot(top_10_countries, aes(x = reorder(`Country or region`, -Score), y = Score)) +
+    geom_bar(stat = "identity", fill = "green") +
+    xlab("Country") +
+    ylab("Happiness Score") +
+    ggtitle(paste("Top 10 Countries by Happiness Score - Student ID:", student_id, "-", current_datetime)) +
+    coord_flip() +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(colour = "grey"))
+
+
+# TASK 4: Scatter plot with trendline
+
+# Variables
+student_id <- "maxram3385"
+
+# Read the Excel file into a data frame
+file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+# Create the scatter plot with trendline
+ggplot(df_new, aes(x = `GDP per capita`, y = Score)) +
+    geom_point(aes(color = "Data Points"), size = 3) +
+    geom_smooth(method = "lm", se = FALSE, aes(color = "Trendline")) +
+    scale_color_manual(values = c("Data Points" = "blue", "Trendline" = "red")) +
+    xlab("GDP per Capita") +
+    ylab("Happiness Score") +
+    ggtitle(paste("Happiness Score vs GDP per Capita with Trendline - Student ID:", student_id, "-", current_datetime)) +
+    theme_minimal() +
+    theme(panel.grid.major = element_line(colour = "grey")) +
+    theme(legend.title = element_blank())
+
+
+# TASK 5: Correlation heatmap
+
+# Variables
+student_id <- "maxram3385"
+
+# Read the Excel file into a data frame
+file_path <- "C:/Files/Excel/DA_PythonR/2019_Happiness_Index_v2_Task2.xlsx"
+df_new <- read_excel(file_path)
+
+# Get current date and time
+current_datetime <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+# Select Columns for Correlation Matrix
+selected_columns <- df_new %>% select(Score, `GDP per capita`, `Social support`, Generosity)
+
+# Calculate Correlation Matrix
+correlation_matrix <- cor(selected_columns, use = "pairwise.complete.obs")
+
+# Create Heatmap
+corrplot(
+    correlation_matrix,
+    method = "color",
+    type = "upper",
+    title = paste("Heatmap of Correlations - StudentID:", student_id, "-", current_datetime),
+    tl.col = "black",
+    tl.srt = 45,
+    number.cex = 0.7,
+    addCoef.col = "black"
+)

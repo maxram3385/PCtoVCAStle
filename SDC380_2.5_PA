@@ -1,0 +1,212 @@
+# Task 1: Load libraries and dataset
+library(readxl)
+library(writexl)
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+library(IRdisplay)
+
+student_id <- "maxram3385"
+
+file_path <- "C:/Files/Excel/DA_PythonR/AirBnBSummary_v2.xlsx"
+df <- read_excel(file_path)
+
+# Remove the empty student ID placeholder column
+df <- df %>% select(-any_of("<StudentID>"))
+
+df_cleaned <- df
+
+display_markdown(paste("###", student_id))
+
+
+# Task 2: Remove duplicate entries
+display_markdown("## Task 2: Duplicate Entries")
+
+duplicate_rows_before <- sum(duplicated(df_cleaned))
+df_cleaned <- df_cleaned %>% distinct()
+duplicate_rows_after <- sum(duplicated(df_cleaned))
+
+print(paste("Duplicate entries before cleaning:", duplicate_rows_before))
+print(paste("Duplicate entries after cleaning:", duplicate_rows_after))
+
+
+# Task 3: Replace Private room with Private Room
+display_markdown("## Task 3: Correct Room Types")
+
+replaced_count <- sum(df_cleaned$room_type == "Private room", na.rm = TRUE)
+
+df_cleaned$room_type <- replace(
+    df_cleaned$room_type,
+    df_cleaned$room_type == "Private room",
+    "Private Room"
+)
+
+print(paste(replaced_count, "entries were replaced."))
+display(table(df_cleaned$room_type))
+
+
+# Task 4: Fill missing numeric values with the column median
+display_markdown("## Task 4: Missing Values")
+
+missing_values_before <- sapply(df_cleaned, function(x) sum(is.na(x)))
+
+display_markdown("### Missing values before cleaning")
+display(missing_values_before)
+
+numerical_columns <- c(
+    "price",
+    "minimum_nights",
+    "number_of_reviews",
+    "availability_365"
+)
+
+for (col in numerical_columns) {
+    median_value <- median(df_cleaned[[col]], na.rm = TRUE)
+    df_cleaned[[col]][is.na(df_cleaned[[col]])] <- median_value
+}
+
+display_markdown("### Missing values after cleaning")
+display(sapply(df_cleaned, function(x) sum(is.na(x))))
+
+
+# Task 5: Remove outlier rows using 1.5 * IQR
+display_markdown("## Task 5: Remove Outliers")
+
+outlier_mask <- rep(FALSE, nrow(df_cleaned))
+
+# Calculate all bounds before removing any rows
+for (col in numerical_columns) {
+    Q1 <- quantile(df_cleaned[[col]], 0.25, na.rm = TRUE)
+    Q3 <- quantile(df_cleaned[[col]], 0.75, na.rm = TRUE)
+    IQR_value <- Q3 - Q1
+
+    column_outliers <- (
+        df_cleaned[[col]] < Q1 - 1.5 * IQR_value
+    ) | (
+        df_cleaned[[col]] > Q3 + 1.5 * IQR_value
+    )
+
+    outlier_mask <- outlier_mask | column_outliers
+}
+
+print(paste("Rows before removing outliers:", nrow(df_cleaned)))
+print(paste("Outlier rows removed:", sum(outlier_mask)))
+
+df_cleaned <- df_cleaned[!outlier_mask, ]
+
+print(paste("Rows after removing outliers:", nrow(df_cleaned)))
+
+
+# Task 6: Save the cleaned dataset
+display_markdown("## Task 6: Save Cleaned Dataset")
+
+cleaned_file_path <- "C:/Files/Excel/DA_PythonR/AirBnBSummary_v2_R_Cleaned.xlsx"
+
+write_xlsx(df_cleaned, cleaned_file_path)
+
+print(paste("Cleaned dataset saved to:", cleaned_file_path))
+
+
+# Task 7: Display descriptive statistics
+display_markdown(paste("## Task 7: Statistics -", student_id))
+
+# Find the most frequent minimum_nights value or values
+minimum_nights_counts <- table(df_cleaned$minimum_nights)
+mode_minimum_nights <- names(
+    minimum_nights_counts[
+        minimum_nights_counts == max(minimum_nights_counts)
+    ]
+)
+
+print(paste("Total count of listings:", nrow(df_cleaned)))
+print(paste("Minimum price:", min(df_cleaned$price)))
+print(paste("Maximum price:", max(df_cleaned$price)))
+print(paste("Mean price of listings:", mean(df_cleaned$price)))
+print(paste("Median number_of_reviews:", median(df_cleaned$number_of_reviews)))
+print(paste("Mode minimum_nights:", paste(mode_minimum_nights, collapse = ", ")))
+print(paste("Standard deviation of price:", sd(df_cleaned$price)))
+
+correlation_price_availability <- cor(
+    df_cleaned$price,
+    df_cleaned$availability_365
+)
+
+print(paste(
+    "Correlation between price and availability_365:",
+    correlation_price_availability
+))
+
+
+# Task 8: Histogram of number_of_reviews
+histogram_plot <- ggplot(df_cleaned, aes(x = number_of_reviews)) +
+    geom_histogram(bins = 20, fill = "skyblue", color = "black") +
+    xlab("Number of Reviews") +
+    ylab("Number of Listings") +
+    ggtitle(paste(
+        "Histogram of Number of Reviews",
+        student_id,
+        sep = "\n"
+    )) +
+    theme_minimal()
+
+print(histogram_plot)
+
+
+# Task 9: Bar chart of minimum_nights
+bar_plot <- ggplot(df_cleaned, aes(x = factor(minimum_nights))) +
+    geom_bar(fill = "green") +
+    xlab("Minimum Nights") +
+    ylab("Number of Listings") +
+    ggtitle(paste(
+        "Number of Listings by Minimum Nights",
+        student_id,
+        sep = "\n"
+    )) +
+    theme_minimal()
+
+print(bar_plot)
+
+
+# Task 10: Scatter plot of availability_365 and price with trendline
+scatter_plot <- ggplot(
+    df_cleaned,
+    aes(x = availability_365, y = price)
+) +
+    geom_point(color = "blue", alpha = 0.5) +
+    geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "red") +
+    xlab("Availability (Days per Year)") +
+    ylab("Price") +
+    ggtitle(paste(
+        "Price vs Availability with Trendline",
+        student_id,
+        sep = "\n"
+    )) +
+    theme_minimal()
+
+print(scatter_plot)
+
+
+# Task 11: Correlation heatmap
+selected_columns <- df_cleaned %>%
+    select(price, minimum_nights, number_of_reviews, availability_365)
+
+correlation_matrix <- cor(
+    selected_columns,
+    use = "pairwise.complete.obs"
+)
+
+corrplot(
+    correlation_matrix,
+    method = "color",
+    type = "upper",
+    title = paste(
+        "Heatmap of Correlations",
+        student_id,
+        sep = "\n"
+    ),
+    tl.col = "black",
+    tl.srt = 45,
+    number.cex = 0.7,
+    addCoef.col = "black",
+    mar = c(0, 0, 5, 0)
+)

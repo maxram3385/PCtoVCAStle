@@ -1,6 +1,4 @@
-# Task 1:
-
-Load libraries and dataset
+# Task 1: Load libraries and dataset
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,9 +20,7 @@ df_cleaned = df.copy()
 display(Markdown(f"### {student_id} - {current_datetime}"))
 
 
-# Task 2: 
-
-Remove duplicate entries
+# Task 2: Remove duplicate entries
 display(Markdown("## Task 2: Duplicate Entries"))
 
 duplicate_rows_before = df_cleaned.duplicated().sum()
@@ -35,10 +31,7 @@ print("Duplicate entries before cleaning:", duplicate_rows_before)
 print("Duplicate entries after cleaning:", duplicate_rows_after)
 
 
-# Task 3:
-
-
-Replace Private room with Private Room
+# Task 3: Replace Private room with Private Room
 display(Markdown("## Task 3: Correct Room Types"))
 
 replaced_count = (df_cleaned['room_type'] == 'Private room').sum()
@@ -51,10 +44,7 @@ print(f"{replaced_count} entries were replaced.")
 display(df_cleaned['room_type'].value_counts())
 
 
-# Task 4:
-
-
-Fill missing numeric values with the column median
+# Task 4: Fill missing numeric values with the column median
 display(Markdown("## Task 4: Missing Values"))
 
 missing_values_before = df_cleaned.isnull().sum()
@@ -77,10 +67,7 @@ display(Markdown("### Missing values after cleaning"))
 display(df_cleaned.isnull().sum())
 
 
-# Task 5: 
-
-
-Remove outlier rows using 1.5 * IQR
+# Task 5: Remove outlier rows using 1.5 * IQR
 display(Markdown("## Task 5: Remove Outliers"))
 
 Q1 = df_cleaned[numerical_columns].quantile(0.25)
@@ -100,11 +87,7 @@ df_cleaned = df_cleaned.loc[~outlier_mask].copy()
 print("Rows after removing outliers:", len(df_cleaned))
 
 
-# Task 6:
-
-
-
-Save the cleaned dataset
+# Task 6: Save the cleaned dataset
 cleaned_file_path = (
     r"C:\Files\Excel\DA_PythonR\AirBnBSummary_v2_Python_Cleaned.xlsx"
 )
@@ -115,11 +98,7 @@ display(Markdown("## Task 6: Save Cleaned Dataset"))
 print("Cleaned dataset saved to:", cleaned_file_path)
 
 
-# Task 7: 
-
-
-
-Display descriptive statistics
+# Task 7: Display descriptive statistics
 display(Markdown(f"## Task 7: Statistics - {student_id} - {current_datetime}"))
 
 print("Total count of listings:", len(df_cleaned))
@@ -140,10 +119,7 @@ print(
 )
 
 
-# Task 8: 
-
-
-Histogram of number_of_reviews
+# Task 8: Histogram of number_of_reviews
 plt.figure(figsize=(10, 6))
 plt.hist(
     df_cleaned['number_of_reviews'],
@@ -162,10 +138,7 @@ plt.tight_layout()
 plt.show()
 
 
-# Task 9:
-
-
-Bar chart of minimum_nights
+# Task 9: Bar chart of minimum_nights
 minimum_nights_counts = (
     df_cleaned['minimum_nights'].value_counts().sort_index()
 )
@@ -187,10 +160,7 @@ plt.tight_layout()
 plt.show()
 
 
-# Task 10: 
-
-
-Scatter plot of availability_365 and price with trendline
+# Task 10: Scatter plot of availability_365 and price with trendline
 x = df_cleaned['availability_365']
 y = df_cleaned['price']
 
@@ -218,10 +188,7 @@ plt.tight_layout()
 plt.show()
 
 
-# Task 11:
-
-
-Correlation heatmap
+# Task 11: Correlation heatmap
 selected_columns = [
     'price',
     'minimum_nights',

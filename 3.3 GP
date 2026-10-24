@@ -1,0 +1,221 @@
+Step 1
+
+# Load Libraries
+library(IRdisplay)
+library(readxl)
+library(dplyr)
+library(caret)
+library(randomForest)
+library(kernlab)
+library(plotly)
+library(ggplot2)
+
+# Initialize student_id and todays_date
+student_id <- "maxram3385"
+todays_date <- "2026-10-24"
+
+# Step 1: Data Preprocessing
+# ---------------------------
+
+display_markdown(paste("Date:", todays_date))
+display_markdown(paste("Student ID:", student_id))
+
+# Read in data
+df <- read_xlsx("C:\\Files\\Excel\\Predictive_PythonR\\2019_Happiness_Index_v3.xlsx")
+
+# Drop unnecessary columns
+df <- df %>% select(-c("Overall rank", "Country or region", "StudentID"))
+
+colnames(df) <- gsub(" ", "_", colnames(df))
+
+# Categorize Score into bins
+df$Score_category <- cut(
+    df$Score,
+    breaks = c(0, 4, 6, 10),
+    labels = c("Low", "Medium", "High"),
+    right = FALSE
+)
+
+# Display the first few rows of the modified DataFrame
+head(df)
+
+Step 2
+# Step 2: Define Features and Target for Classification
+# ----------------------------------------------------
+
+# Define the features (X) and the target (y) variables for classification
+X_class <- df[, !(names(df) %in% c("Score", "Score_category"))]
+y_class <- df$Score_category
+
+# Split the dataset into 80% training and 20% testing for classification
+set.seed(42)
+trainIndex <- createDataPartition(y_class, p = .8, list = FALSE)
+X_train_class <- X_class[trainIndex,]
+y_train_class <- y_class[trainIndex]
+X_test_class <- X_class[-trainIndex,]
+y_test_class <- y_class[-trainIndex]
+
+# Show the training and test data sets
+display(paste("### ", student_id, " - ", todays_date))
+display("#### Features")
+display(head(X_class))
+display("#### Target")
+display(head(y_class))
+
+Step 3:
+# Step 3: Model Building and Evaluation
+# -------------------------------------
+
+# Train the models using caret's train function
+ctrl <- trainControl(method = "cv", number = 10)
+
+# Random Forest Model
+rf_model <- train(
+    y_train_class ~ .,
+    data = data.frame(X_train_class, y_train_class),
+    method = 'rf',
+    trControl = ctrl
+)
+
+# k-NN Model
+knn_model <- train(
+    y_train_class ~ .,
+    data = data.frame(X_train_class, y_train_class),
+    method = 'knn',
+    trControl = ctrl
+)
+
+# SVM Model
+svm_model <- train(
+    y_train_class ~ .,
+    data = data.frame(X_train_class, y_train_class),
+    method = 'svmRadial',
+    trControl = ctrl
+)
+
+# Display models to show they have been trained successfully
+display(paste("### ", student_id, " - ", todays_date))
+display("Random Forest Model Summary")
+print(rf_model)
+display("k-NN Model Summary")
+print(knn_model)
+display("SVM Model Summary")
+print(svm_model)
+
+# Calculate and display training accuracy for each model
+y_pred_train_rf <- predict(rf_model, newdata = X_train_class)
+y_pred_train_knn <- predict(knn_model, newdata = X_train_class)
+y_pred_train_svm <- predict(svm_model, newdata = X_train_class)
+
+training_accuracy_rf <- sum(y_pred_train_rf == y_train_class) /
+    length(y_train_class)
+training_accuracy_knn <- sum(y_pred_train_knn == y_train_class) /
+    length(y_train_class)
+training_accuracy_svm <- sum(y_pred_train_svm == y_train_class) /
+    length(y_train_class)
+
+# Display training accuracy
+display(paste("### ", student_id, " - ", todays_date))
+display(paste("Training Accuracy for Random Forest: ",
+              round(training_accuracy_rf, 2)))
+display(paste("Training Accuracy for k-NN: ",
+              round(training_accuracy_knn, 2)))
+display(paste("Training Accuracy for SVM: ",
+              round(training_accuracy_svm, 2)))
+
+
+Step 4:
+# Make predictions on the test set
+y_pred_test_rf <- predict(rf_model, newdata = X_test_class)
+y_pred_test_knn <- predict(knn_model, newdata = X_test_class)
+y_pred_test_svm <- predict(svm_model, newdata = X_test_class)
+
+# Calculate test accuracy
+test_accuracy_rf <- sum(y_pred_test_rf == y_test_class) /
+    length(y_test_class)
+test_accuracy_knn <- sum(y_pred_test_knn == y_test_class) /
+    length(y_test_class)
+test_accuracy_svm <- sum(y_pred_test_svm == y_test_class) /
+    length(y_test_class)
+
+# Create a data frame to hold the model metrics
+model_metrics <- data.frame(
+    Model = c("Random Forest", "k-NN", "SVM"),
+    Test_Accuracy = c(test_accuracy_rf, test_accuracy_knn, test_accuracy_svm)
+)
+
+# Create ggplot bar plot for model accuracy
+accuracy_plot <- ggplot(
+    model_metrics,
+    aes(x = Model, y = Test_Accuracy, fill = Model)
+) +
+    geom_bar(stat = 'identity') +
+    labs(
+        title = "Model Accuracy Comparison",
+        x = "Model",
+        y = "Test Accuracy"
+    ) +
+    theme_minimal()
+
+# Display the plot
+display("### Step 4: Visualization and Comparison")
+display(accuracy_plot)
+
+# Confusion Matrix
+conf_matrix_rf <- confusionMatrix(y_pred_test_rf, y_test_class)
+conf_matrix_knn <- confusionMatrix(y_pred_test_knn, y_test_class)
+conf_matrix_svm <- confusionMatrix(y_pred_test_svm, y_test_class)
+
+# Display Confusion Matrix
+display(paste("### ", student_id, " - ", todays_date))
+display("### Confusion Matrix for Random Forest")
+print(as.matrix(conf_matrix_rf))
+
+display("### Confusion Matrix for K-NN")
+print(as.matrix(conf_matrix_knn))
+
+display("### Confusion Matrix for SVM")
+print(as.matrix(conf_matrix_svm))
+
+Step 5:
+# Make predictions on the entire dataset
+y_pred_all_rf <- predict(rf_model, newdata = X_class)
+y_pred_all_knn <- predict(knn_model, newdata = X_class)
+y_pred_all_svm <- predict(svm_model, newdata = X_class)
+
+# Add these predictions to the original data frame
+df$Predicted_RF <- y_pred_all_rf
+df$Predicted_kNN <- y_pred_all_knn
+df$Predicted_SVM <- y_pred_all_svm
+
+# Count the number of correct and incorrect predictions for each model
+correct_rf <- sum(df$Score_category == df$Predicted_RF)
+correct_knn <- sum(df$Score_category == df$Predicted_kNN)
+correct_svm <- sum(df$Score_category == df$Predicted_SVM)
+
+# Create a data frame to hold the number of correct predictions for each model
+correct_predictions_df <- data.frame(
+    Model = c("Random Forest", "k-NN", "SVM"),
+    Correct_Predictions = c(correct_rf, correct_knn, correct_svm)
+)
+
+# Create ggplot bar plot for the number of correct predictions
+correct_predictions_plot <- ggplot(
+    correct_predictions_df,
+    aes(x = Model, y = Correct_Predictions, fill = Model)
+) +
+    geom_bar(stat = 'identity') +
+    labs(
+        title = "Number of Correct Predictions by Model",
+        x = "Model",
+        y = "Number of Correct Predictions"
+    ) +
+    theme_minimal()
+
+# Display counts and the bar plot
+display("### Step 5: Compare Predictions Against Existing Data")
+display(paste("### ", student_id, " - ", todays_date))
+display(paste("Correct predictions for Random Forest: ", correct_rf))
+display(paste("Correct predictions for k-NN: ", correct_knn))
+display(paste("Correct predictions for SVM: ", correct_svm))
+display(correct_predictions_plot)

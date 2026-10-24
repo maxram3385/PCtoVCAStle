@@ -34,3 +34,155 @@ df["Score_category"] = pd.cut(
 display(Markdown(f"Date: {todays_date}"))
 display(Markdown(f"Student ID: {student_id}"))
 display(df.head())
+
+
+step 2
+
+# Specify which columns will be used as features and which one will be
+# the target.
+X_class = df.drop(['Score', 'Score_category'], axis=1)
+y_class = df['Score_category']
+
+# Split the dataset into 80% training and 20% testing
+X_train_class, X_test_class, y_train_class, y_test_class = train_test_split(
+    X_class, y_class, test_size=0.2, random_state=42
+)
+
+# Show the features and target
+display(Markdown(f"### {student_id} - {todays_date}"))
+display(Markdown("#### Features"))
+display(X_class.head())
+display(Markdown("#### Target"))
+display(y_class.head())
+
+Step 3
+# Initialize and train the models
+logistic_model = LogisticRegression(random_state=42)
+rf_classifier = RandomForestClassifier(random_state=42)
+svm_classifier = SVC(random_state=42)
+
+# Train the models
+logistic_model.fit(X_train_class, y_train_class)
+rf_classifier.fit(X_train_class, y_train_class)
+svm_classifier.fit(X_train_class, y_train_class)
+
+# Make predictions on the test set
+y_pred_logistic = logistic_model.predict(X_test_class)
+y_pred_rf = rf_classifier.predict(X_test_class)
+y_pred_svm = svm_classifier.predict(X_test_class)
+
+# Calculate and display training accuracy for each model
+training_accuracy_logistic = accuracy_score(
+    y_train_class, logistic_model.predict(X_train_class)
+)
+training_accuracy_rf = accuracy_score(
+    y_train_class, rf_classifier.predict(X_train_class)
+)
+training_accuracy_svm = accuracy_score(
+    y_train_class, svm_classifier.predict(X_train_class)
+)
+
+# Add predictions to the test set DataFrame
+X_test_class['Predicted_Logistic'] = y_pred_logistic
+X_test_class['Predicted_RF'] = y_pred_rf
+X_test_class['Predicted_SVM'] = y_pred_svm
+
+display(Markdown(f"### {student_id} - {todays_date}"))
+display(Markdown(f"Training Accuracy for Logistic Regression: {training_accuracy_logistic:.2f}"))
+display(Markdown(f"Training Accuracy for Random Forest: {training_accuracy_rf:.2f}"))
+display(Markdown(f"Training Accuracy for SVM: {training_accuracy_svm:.2f}"))
+
+Step 4
+# Calculate accuracy and F1-Score
+accuracy_logistic = accuracy_score(y_test_class, y_pred_logistic)
+accuracy_rf = accuracy_score(y_test_class, y_pred_rf)
+accuracy_svm = accuracy_score(y_test_class, y_pred_svm)
+
+f1_logistic = f1_score(y_test_class, y_pred_logistic, average='weighted')
+f1_rf = f1_score(y_test_class, y_pred_rf, average='weighted')
+f1_svm = f1_score(y_test_class, y_pred_svm, average='weighted')
+
+# Create Confusion Matrices
+conf_matrix_logistic = confusion_matrix(y_test_class, y_pred_logistic)
+conf_matrix_rf = confusion_matrix(y_test_class, y_pred_rf)
+conf_matrix_svm = confusion_matrix(y_test_class, y_pred_svm)
+
+# Display Confusion Matrices
+display(Markdown(f"### {student_id} - {todays_date}"))
+display(Markdown("#### Confusion Matrix for Logistic Regression"))
+display(conf_matrix_logistic)
+display(Markdown("#### Confusion Matrix for Random Forest"))
+display(conf_matrix_rf)
+display(Markdown("#### Confusion Matrix for SVM"))
+display(conf_matrix_svm)
+
+# Create a DataFrame for the metrics
+metrics_df = pd.DataFrame({
+    'Model': ['Logistic Regression', 'Random Forest', 'SVM'],
+    'Accuracy': [accuracy_logistic, accuracy_rf, accuracy_svm],
+    'F1 Score': [f1_logistic, f1_rf, f1_svm]
+})
+
+# Create a bar plot using Matplotlib
+models = ['Logistic Regression', 'Random Forest', 'SVM']
+accuracies = [accuracy_logistic, accuracy_rf, accuracy_svm]
+
+plt.figure(figsize=(12, 6))
+plt.barh(models, accuracies, color='skyblue')
+plt.xlabel('Accuracy')
+plt.ylabel('Model')
+plt.title('Model Accuracy Comparison')
+plt.xlim(0, 1)
+plt.show()
+
+Step 5
+
+# Header and Display
+display(Markdown("### Step 5: Compare Predictions Against Existing Data"))
+display(Markdown(f"Date: {todays_date}"))
+display(Markdown(f"Student ID: {student_id}"))
+
+# Compare predictions against existing data
+df['Predicted_Logistic'] = logistic_model.predict(X_class)
+df['Predicted_RF'] = rf_classifier.predict(X_class)
+df['Predicted_SVM'] = svm_classifier.predict(X_class)
+
+# Count correct and incorrect predictions for each model
+logistic_correct_count = sum(df['Score_category'] == df['Predicted_Logistic'])
+rf_correct_count = sum(df['Score_category'] == df['Predicted_RF'])
+svm_correct_count = sum(df['Score_category'] == df['Predicted_SVM'])
+
+logistic_incorrect_count = len(df) - logistic_correct_count
+rf_incorrect_count = len(df) - rf_correct_count
+svm_incorrect_count = len(df) - svm_correct_count
+
+# Data for bar chart
+models = ['Logistic Regression', 'Random Forest', 'SVM']
+correct_counts = [logistic_correct_count, rf_correct_count, svm_correct_count]
+incorrect_counts = [logistic_incorrect_count, rf_incorrect_count, svm_incorrect_count]
+
+# Create a bar chart using Matplotlib
+barWidth = 0.35
+r1 = range(len(correct_counts))
+r2 = [x + barWidth for x in r1]
+
+plt.figure(figsize=(12, 6))
+plt.bar(
+    r1, correct_counts, color='g', width=barWidth,
+    edgecolor='grey', label='Correct'
+)
+plt.bar(
+    r2, incorrect_counts, color='r', width=barWidth,
+    edgecolor='grey', label='Incorrect'
+)
+
+plt.xlabel('Models', fontweight='bold')
+plt.xticks(
+    [r + barWidth / 2 for r in range(len(correct_counts))],
+    models
+)
+plt.ylabel('Count')
+plt.title('Model Prediction Comparison')
+plt.legend()
+plt.show()
+

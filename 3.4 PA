@@ -1,0 +1,223 @@
+# step 1 - Load and prepare data
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime
+from IPython.display import display, Markdown
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+
+student_id = "maxram3385"
+
+def show_header():
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    display(Markdown(f"### {student_id} - {timestamp}"))
+
+df = pd.read_excel(
+    "AirbnbListings_v3.xlsx",
+    sheet_name="ListingData"
+)
+
+labels = ["Inexpensive", "Standard Price", "Expensive"]
+bins = [0, 250, 500, 1200]
+
+df["Price_category"] = pd.cut(
+    df["price"],
+    bins=bins,
+    labels=labels,
+    right=False
+)
+
+# Remove rows with missing prices or prices outside the required bins
+df = df.dropna(subset=["Price_category"]).copy()
+
+show_header()
+display(df.head())
+display(df["Price_category"].value_counts(sort=False))
+
+
+# step 2 - Features, target, and 80/20 split
+
+# Exclude identifiers, host names, and the price used to create the target
+X = df.drop(
+    columns=["id", "host_id", "host_name", "price", "Price_category"]
+)
+
+# Convert text categories into numeric columns
+X = pd.get_dummies(
+    X,
+    columns=["neighbourhood", "room_type"],
+    dtype=int
+)
+
+y = df["Price_category"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+show_header()
+display(Markdown("#### Features"))
+display(X.head())
+display(Markdown("#### Target"))
+display(y.head())
+
+print("Training rows:", len(X_train))
+print("Testing rows:", len(X_test))
+
+
+# step 3 - Train models and display training accuracy
+
+models = {
+    "Logistic Regression": make_pipeline(
+        StandardScaler(),
+        LogisticRegression(max_iter=1000, random_state=42)
+    ),
+    "Random Forest": RandomForestClassifier(random_state=42),
+    "SVM": make_pipeline(
+        StandardScaler(),
+        SVC(random_state=42)
+    )
+}
+
+training_accuracies = {}
+test_predictions = {}
+
+for name, model in models.items():
+    model.fit(X_train, y_train)
+
+    training_accuracies[name] = accuracy_score(
+        y_train,
+        model.predict(X_train)
+    )
+
+    test_predictions[name] = model.predict(X_test)
+
+training_results = pd.DataFrame({
+    "Model": list(training_accuracies.keys()),
+    "Training Accuracy": list(training_accuracies.values())
+})
+
+show_header()
+display(training_results)
+
+
+# step 4 - F1 scores and confusion matrices
+
+show_header()
+
+results = []
+
+for name, predictions in test_predictions.items():
+    results.append({
+        "Model": name,
+        "Test Accuracy": accuracy_score(y_test, predictions),
+        "Weighted F1 Score": f1_score(
+            y_test,
+            predictions,
+            average="weighted",
+            zero_division=0
+        )
+    })
+
+display(pd.DataFrame(results))
+
+for name, predictions in test_predictions.items():
+    matrix = confusion_matrix(
+        y_test,
+        predictions,
+        labels=labels
+    )
+
+    matrix_df = pd.DataFrame(
+        matrix,
+        index=labels,
+        columns=labels
+    )
+
+    matrix_df.index.name = "Actual"
+    matrix_df.columns.name = "Predicted"
+
+    display(Markdown(f"#### {name} Confusion Matrix"))
+    display(matrix_df)
+
+
+# step 5 - Training accuracy bar graph
+
+show_header()
+
+plt.figure(figsize=(9, 5))
+plt.bar(
+    training_results["Model"],
+    training_results["Training Accuracy"],
+    color=["steelblue", "seagreen", "coral"]
+)
+
+plt.title("Training Accuracy by Model")
+plt.xlabel("Model")
+plt.ylabel("Training Accuracy")
+plt.ylim(0, 1.1)
+
+for i, accuracy in enumerate(training_results["Training Accuracy"]):
+    plt.text(
+        i,
+        accuracy + 0.02,
+        f"{accuracy:.2%}",
+        ha="center"
+    )
+
+plt.tight_layout()
+plt.show()
+
+
+# step 6 - Correct and incorrect predictions
+
+comparison_rows = []
+
+for name, model in models.items():
+    predictions = model.predict(X)
+
+    correct = int((predictions == y).sum())
+    incorrect = len(y) - correct
+
+    comparison_rows.append({
+        "Model": name,
+        "Correct": correct,
+        "Incorrect": incorrect,
+        "Correct Proportion": correct / len(y),
+        "Incorrect Proportion": incorrect / len(y)
+    })
+
+comparison_df = pd.DataFrame(comparison_rows)
+
+show_header()
+display(comparison_df)
+
+ax = comparison_df.set_index("Model")[
+    ["Correct Proportion", "Incorrect Proportion"]
+].plot(
+    kind="bar",
+    stacked=True,
+    figsize=(9, 5),
+    color=["seagreen", "coral"],
+    rot=0
+)
+
+ax.set_title("Correct and Incorrect Prediction Proportions")
+ax.set_xlabel("Model")
+ax.set_ylabel("Proportion of Predictions")
+ax.set_ylim(0, 1)
+ax.legend(["Correct", "Incorrect"])
+
+plt.tight_layout()
+plt.show()
+

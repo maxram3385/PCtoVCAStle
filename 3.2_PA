@@ -1,0 +1,36 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+import matplotlib.pyplot as plt
+from datetime import datetime
+from IPython.display import display, Markdown
+
+todays_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+student_id = "StudentID"
+
+# Step 1: Load and prepare the data
+file_path = r"C:\Files\Excel\Predictive_PythonR\2019_Happiness_Index_v3.xlsx"
+df = pd.read_excel(file_path)
+
+df.drop(
+    ["Overall rank", "Country or region", "StudentID"],
+    axis=1,
+    inplace=True
+)
+
+bins = [0, 4, 6, 10]
+labels = ["Low", "Medium", "High"]
+
+df["Score_category"] = pd.cut(
+    df["Score"],
+    bins=bins,
+    labels=labels,
+    right=False
+)
+
+display(Markdown(f"Date: {todays_date}"))
+display(Markdown(f"Student ID: {student_id}"))
+display(df.head())

@@ -1,0 +1,129 @@
+# step 1 - Load the dataset
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+from IPython.display import display, Markdown
+
+df = pd.read_excel(
+    r"C:\Files\Excel\Project\StudentsPerformance.xlsx",
+    sheet_name="StudentsPerformance"
+)
+
+student_id = "maxram3385"
+
+def show_header():
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    display(Markdown(f"### {student_id} - {timestamp}"))
+
+show_header()
+display(df.head())
+
+
+# step 2 - Add a separate Markdown cell in your notebook containing:
+# Student Performance Project - maxram3385 - 2026-10-24
+
+
+# step 3 - Histogram of math scores
+
+show_header()
+
+plt.figure(figsize=(9, 5))
+plt.hist(
+    df["math score"],
+    bins=range(0, 101, 10),
+    color="skyblue",
+    edgecolor="black"
+)
+
+plt.title("Distribution of Math Scores")
+plt.xlabel("Math Score")
+plt.ylabel("Number of Students")
+plt.xticks(range(0, 101, 10))
+plt.tight_layout()
+plt.show()
+
+
+# step 4 - Average math scores by race/ethnicity
+
+average_math = df.groupby("race/ethnicity")["math score"].mean()
+
+show_header()
+display(average_math.round(2).to_frame("Average Math Score"))
+
+plt.figure(figsize=(9, 5))
+plt.bar(
+    average_math.index,
+    average_math.values,
+    color="steelblue"
+)
+
+plt.title("Average Math Score by Race/Ethnicity")
+plt.xlabel("Race/Ethnicity Group")
+plt.ylabel("Average Math Score")
+plt.ylim(0, 100)
+
+for i, score in enumerate(average_math.values):
+    plt.text(i, score + 1, f"{score:.2f}", ha="center")
+
+plt.tight_layout()
+plt.show()
+
+
+# step 5 - Math scores compared with writing and reading scores
+
+show_header()
+
+plt.figure(figsize=(9, 5))
+plt.scatter(
+    df["math score"],
+    df["writing score"],
+    alpha=0.5,
+    color="purple"
+)
+
+plt.title("Math Score vs. Writing Score")
+plt.xlabel("Math Score")
+plt.ylabel("Writing Score")
+plt.tight_layout()
+plt.show()
+
+# This additional plot supports question 7d
+show_header()
+
+plt.figure(figsize=(9, 5))
+plt.scatter(
+    df["math score"],
+    df["reading score"],
+    alpha=0.5,
+    color="seagreen"
+)
+
+plt.title("Math Score vs. Reading Score")
+plt.xlabel("Math Score")
+plt.ylabel("Reading Score")
+plt.tight_layout()
+plt.show()
+
+
+# step 6 - Correlation heatmap
+
+scores = df[["math score", "reading score", "writing score"]]
+correlations = scores.corr()
+
+show_header()
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(
+    correlations,
+    annot=True,
+    fmt=".3f",
+    cmap="coolwarm",
+    vmin=-1,
+    vmax=1
+)
+
+plt.title("Correlations Between Student Scores")
+plt.tight_layout()
+plt.show()

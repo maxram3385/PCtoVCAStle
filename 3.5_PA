@@ -1,0 +1,225 @@
+# step 2 - Load the dataset and create the labels
+
+library(IRdisplay)
+library(readxl)
+library(caret)
+library(randomForest)
+library(kernlab)
+library(ggplot2)
+
+student_id <- "maxram3385"
+
+show_header <- function() {
+    display_markdown(paste(
+        "###", student_id, "-",
+        format(Sys.time(), "%Y-%m-%d %H:%M")
+    ))
+}
+
+df <- as.data.frame(read_xlsx(
+    "C:\\Files\\Excel\\Predictive_PythonR\\AirbnbListings_v3.xlsx",
+    sheet = "ListingData"
+))
+
+labels <- c("Inexpensive", "Standard Price", "Expensive")
+
+
+# step 3 - Categorize prices using the specified boundaries
+
+bins <- c(0, 250, 500, 1200)
+
+df$Price_category <- cut(
+    df$price,
+    breaks = bins,
+    labels = labels,
+    right = FALSE
+)
+
+# Remove missing prices and prices outside the specified range
+df <- df[!is.na(df$Price_category), ]
+
+show_header()
+display(head(df))
+display(table(df$Price_category))
+
+
+# step 4 - Train and evaluate the three models
+
+# Convert neighborhood and room type into numeric indicator columns
+X_class <- as.data.frame(model.matrix(
+    ~ neighbourhood + room_type + minimum_nights +
+        number_of_reviews + availability_365 - 1,
+    data = df
+))
+
+y_class <- df$Price_category
+
+# Split into 80% training and 20% testing
+set.seed(42)
+
+trainIndex <- createDataPartition(
+    y_class,
+    p = 0.8,
+    list = FALSE
+)
+
+X_train <- X_class[trainIndex, ]
+X_test <- X_class[-trainIndex, ]
+y_train <- y_class[trainIndex]
+y_test <- y_class[-trainIndex]
+
+ctrl <- trainControl(method = "cv", number = 10)
+
+# Train Random Forest
+rf_model <- train(
+    x = X_train,
+    y = y_train,
+    method = "rf",
+    trControl = ctrl
+)
+
+# Train k-NN
+knn_model <- train(
+    x = X_train,
+    y = y_train,
+    method = "knn",
+    preProcess = c("center", "scale"),
+    trControl = ctrl
+)
+
+# Train SVM
+svm_model <- train(
+    x = X_train,
+    y = y_train,
+    method = "svmRadial",
+    preProcess = c("center", "scale"),
+    trControl = ctrl
+)
+
+models <- list(
+    "k-NN" = knn_model,
+    "Random Forest" = rf_model,
+    "SVM" = svm_model
+)
+
+metrics <- data.frame()
+comparison <- data.frame()
+
+show_header()
+
+for (name in names(models)) {
+    model <- models[[name]]
+
+    train_predictions <- predict(model, newdata = X_train)
+    test_predictions <- predict(model, newdata = X_test)
+    all_predictions <- predict(model, newdata = X_class)
+
+    training_accuracy <- mean(train_predictions == y_train)
+    test_accuracy <- mean(test_predictions == y_test)
+
+    cm <- confusionMatrix(test_predictions, y_test)
+
+    # Calculate weighted F1 from the confusion matrix
+    # Rows are predictions; columns are actual categories
+    counts <- cm$table
+    true_positives <- diag(counts)
+    actual_counts <- colSums(counts)
+    predicted_counts <- rowSums(counts)
+
+    denominator <- actual_counts + predicted_counts
+    class_f1 <- ifelse(
+        denominator == 0,
+        0,
+        2 * true_positives / denominator
+    )
+
+    weighted_f1 <- sum(class_f1 * actual_counts) /
+        sum(actual_counts)
+
+    metrics <- rbind(
+        metrics,
+        data.frame(
+            Model = name,
+            Training_Accuracy = training_accuracy,
+            Test_Accuracy = test_accuracy,
+            Weighted_F1 = weighted_f1
+        )
+    )
+
+    correct <- sum(all_predictions == y_class)
+    incorrect <- length(y_class) - correct
+
+    comparison <- rbind(
+        comparison,
+        data.frame(
+            Model = name,
+            Correct = correct,
+            Incorrect = incorrect
+        )
+    )
+
+    display_markdown(paste("#### Confusion Matrix:", name))
+    print(cm$table)
+}
+
+show_header()
+display(metrics)
+
+show_header()
+display(comparison)
+
+
+# step 5 - Bar graph of training accuracy
+
+show_header()
+
+training_plot <- ggplot(
+    metrics,
+    aes(x = Model, y = Training_Accuracy, fill = Model)
+) +
+    geom_col() +
+    geom_text(
+        aes(label = sprintf("%.2f", Training_Accuracy)),
+        vjust = -0.5
+    ) +
+    ylim(0, 1.1) +
+    labs(
+        title = "Training Accuracy by Model",
+        x = "Model",
+        y = "Training Accuracy"
+    ) +
+    theme_minimal()
+
+print(training_plot)
+
+
+# step 6 - Bar graph of correct and incorrect proportions
+
+plot_data <- data.frame(
+    Model = rep(comparison$Model, each = 2),
+    Result = rep(c("Correct", "Incorrect"), nrow(comparison)),
+    Count = as.vector(t(as.matrix(
+        comparison[, c("Correct", "Incorrect")]
+    )))
+)
+
+show_header()
+display(comparison)
+
+comparison_plot <- ggplot(
+    plot_data,
+    aes(x = Model, y = Count, fill = Result)
+) +
+    geom_col(position = "fill") +
+    scale_fill_manual(values = c(
+        "Correct" = "seagreen",
+        "Incorrect" = "coral"
+    )) +
+    labs(
+        title = "Correct and Incorrect Prediction Proportions",
+        x = "Model",
+        y = "Proportion of Predictions"
+    ) +
+    theme_minimal()
+
+print(comparison_plot)

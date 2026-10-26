@@ -1,0 +1,275 @@
+# ============================================================
+# Step 1: Load and Explore the Dataset
+# ============================================================
+
+library(readxl)
+library(IRdisplay)
+library(randomForest)
+library(ggplot2)
+
+student_id <- "maxram3385"
+todays_date <- Sys.Date()
+
+display_markdown(sprintf(
+  "# Prescriptive Analytics R - %s - %s",
+  todays_date, student_id
+))
+
+file_path <- "C:/Files/Excel/Prescriptive_PythonR/2019_Happiness_Index_v4.xlsx"
+happiness_df <- read_excel(file_path, sheet = 1)
+happiness_df$StudentID <- student_id
+
+display_markdown(sprintf(
+  "### Step 1: Load and Explore the Dataset - %s - %s",
+  student_id, todays_date
+))
+
+summary_df <- data.frame(
+  Feature = names(happiness_df),
+  Count = sapply(happiness_df, function(col)
+    if (is.numeric(col)) sum(!is.na(col)) else NA),
+  Mean = sapply(happiness_df, function(col)
+    if (is.numeric(col)) mean(col, na.rm = TRUE) else NA),
+  Std = sapply(happiness_df, function(col)
+    if (is.numeric(col)) sd(col, na.rm = TRUE) else NA),
+  Min = sapply(happiness_df, function(col)
+    if (is.numeric(col)) min(col, na.rm = TRUE) else NA),
+  Max = sapply(happiness_df, function(col)
+    if (is.numeric(col)) max(col, na.rm = TRUE) else NA)
+)
+
+display_markdown("#### Summary Statistics")
+print(summary_df, row.names = FALSE)
+
+
+# ============================================================
+# Step 2: Compute Feature Importance
+# ============================================================
+
+X <- as.data.frame(happiness_df[
+  , !(names(happiness_df) %in%
+        c("Overall rank", "Country or region", "Score", "StudentID"))
+])
+
+y <- happiness_df$Score
+
+set.seed(42)
+model <- randomForest(x = X, y = y)
+
+importances <- model$importance[, "IncNodePurity"]
+
+feature_importance_df <- data.frame(
+  Feature = names(importances),
+  Importance = as.numeric(importances)
+)
+
+feature_importance_df <- feature_importance_df[
+  order(-feature_importance_df$Importance),
+]
+
+display_markdown(sprintf(
+  "### Step 2: Compute Feature Importance - %s - %s",
+  student_id, todays_date
+))
+
+print(feature_importance_df, row.names = FALSE)
+
+print(
+  ggplot(feature_importance_df,
+         aes(x = reorder(Feature, Importance), y = Importance)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      x = "Feature",
+      y = "Importance",
+      title = sprintf("Feature Importances - %s - %s",
+                      student_id, todays_date)
+    )
+)
+
+
+# ============================================================
+# Step 3: Sensitivity Analysis
+# ============================================================
+
+display_markdown(sprintf(
+  "### Step 3: Sensitivity Analysis - %s - %s",
+  student_id, todays_date
+))
+
+feature_to_analyze <- "GDP per capita"
+
+feature_values <- seq(
+  min(X[[feature_to_analyze]]),
+  max(X[[feature_to_analyze]]),
+  length.out = 100
+)
+
+results <- numeric(length(feature_values))
+
+for (i in seq_along(feature_values)) {
+  X_temp <- X
+  X_temp[[feature_to_analyze]] <- feature_values[i]
+  results[i] <- mean(predict(model, X_temp))
+}
+
+print(
+  ggplot() +
+    geom_line(aes(x = feature_values, y = results), color = "blue") +
+    labs(
+      x = feature_to_analyze,
+      y = "Average Predicted Happiness Score",
+      title = sprintf(
+        "Sensitivity Analysis of GDP per capita\n%s - %s",
+        student_id, todays_date
+      )
+    )
+)
+
+
+# ============================================================
+# Step 4: Define the Optimization Problem
+# ============================================================
+
+display_markdown(sprintf(
+  "### Step 4: Define the Optimization Problem - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("
+| Component | Description |
+|---|---|
+| Objective Function | Maximize the predicted happiness score. |
+| Decision Variables | The feature values used to predict happiness. These values are adjusted to search for a combination producing a higher predicted score. |
+| Constraints | Keep each feature between its minimum and maximum observed values in the dataset. |
+| Optimization Method | L-BFGS-B, a method for optimizing functions with bounded variables. |
+")
+
+
+# ============================================================
+# Step 5: Solve the Optimization Problem
+# ============================================================
+
+# This follows the GP's method. Random forest predictions are
+# not smooth, so L-BFGS-B may stop near the starting values.
+
+objective_function <- function(feature_values) {
+  X_temp <- X
+
+  X_temp[] <- matrix(
+    feature_values,
+    nrow = nrow(X_temp),
+    ncol = ncol(X_temp),
+    byrow = TRUE
+  )
+
+  return(-mean(predict(model, X_temp)))
+}
+
+bounds <- cbind(
+  Minimum = sapply(X, min),
+  Maximum = sapply(X, max)
+)
+
+result <- optim(
+  par = colMeans(X),
+  fn = objective_function,
+  lower = bounds[, "Minimum"],
+  upper = bounds[, "Maximum"],
+  method = "L-BFGS-B"
+)
+
+display_markdown(sprintf(
+  "### Step 5: Solve the Optimization Problem - %s - %s",
+  student_id, todays_date
+))
+
+optimal_feature_values <- data.frame(
+  Feature = names(X),
+  Value = as.numeric(result$par)
+)
+
+display_markdown("#### Optimal Feature Values:")
+print(optimal_feature_values, row.names = FALSE)
+
+display_markdown(sprintf(
+  "#### Optimal Happiness Score (returned by optimizer): %.6f",
+  -result$value
+))
+
+
+# ============================================================
+# Step 6: What-If Analysis
+# ============================================================
+
+adjusted_feature_values <- colMeans(X)
+
+adjusted_feature_values["GDP per capita"] <-
+  adjusted_feature_values["GDP per capita"] + 0.1
+
+adjusted_feature_values_df <-
+  as.data.frame(t(adjusted_feature_values))
+
+colnames(adjusted_feature_values_df) <- colnames(X)
+
+adjusted_happiness_score <- mean(
+  predict(model, adjusted_feature_values_df)
+)
+
+display_markdown(sprintf(
+  "### Step 6: What-If Analysis - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("#### Adjusted Feature Values:")
+print(adjusted_feature_values)
+
+display_markdown(sprintf(
+  "#### Adjusted Happiness Score: %.6f",
+  adjusted_happiness_score
+))
+
+
+# ============================================================
+# Step 7: Evaluate Scenarios
+# ============================================================
+
+adjustments <- list(
+  "Scenario 1" = c(
+    "GDP per capita" = 0.1,
+    "Social support" = 0.1
+  ),
+  "Scenario 2" = c(
+    "Healthy life expectancy" = 0.1,
+    "Perceptions of corruption" = -0.1
+  )
+)
+
+scenario_results <- data.frame(
+  Scenario = names(adjustments),
+  Happiness_Score = NA_real_
+)
+
+for (i in seq_along(adjustments)) {
+  adjusted_features <- colMeans(X)
+
+  for (feature in names(adjustments[[i]])) {
+    adjusted_features[feature] <-
+      adjusted_features[feature] + adjustments[[i]][feature]
+  }
+
+  feature_values_df <- as.data.frame(t(adjusted_features))
+  colnames(feature_values_df) <- colnames(X)
+
+  scenario_results$Happiness_Score[i] <- mean(
+    predict(model, feature_values_df)
+  )
+}
+
+display_markdown(sprintf(
+  "### Step 7: Evaluate Scenarios - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("#### Scenario Results:")
+print(scenario_results, row.names = FALSE)

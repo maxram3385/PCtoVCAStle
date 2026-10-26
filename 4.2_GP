@@ -1,0 +1,194 @@
+# Step 1: Load and Explore the Dataset
+
+import pandas as pd
+from datetime import datetime
+from IPython.display import display, Markdown
+
+file_path = r"C:\Files\Excel\Prescriptive_PythonR\2019_Happiness_Index_v4.xlsx"
+happiness_df = pd.read_excel(file_path)
+
+student_id = "maxram3385"
+todays_date = datetime.now().strftime("%Y-%m-%d")
+
+display(Markdown(
+    f"### Step 1: Load and Explore the Dataset - {student_id} - {todays_date}"
+))
+
+display(Markdown("#### Summary Statistics"))
+display(happiness_df.describe())
+
+# Step 2: Compute Feature Importance
+
+from sklearn.ensemble import RandomForestRegressor
+import matplotlib.pyplot as plt
+
+X = happiness_df.drop(
+    ["Overall rank", "Country or region", "Score", "StudentID"],
+    axis=1
+)
+y = happiness_df["Score"]
+
+# Fixed random_state keeps results consistent between runs.
+model = RandomForestRegressor(random_state=42)
+model.fit(X, y)
+
+feature_importance_df = pd.DataFrame({
+    "Feature": X.columns,
+    "Importance": model.feature_importances_
+}).sort_values(by="Importance", ascending=False)
+
+display(Markdown(
+    f"### Step 2: Compute Feature Importance - {student_id} - {todays_date}"
+))
+display(feature_importance_df)
+
+plt.figure(figsize=(10, 6))
+plt.barh(
+    feature_importance_df["Feature"],
+    feature_importance_df["Importance"]
+)
+plt.xlabel("Importance")
+plt.title(f"Feature Importances - {student_id} - {todays_date}")
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()
+
+# Step 3: Sensitivity Analysis
+
+import numpy as np
+
+feature_to_analyze = "GDP per capita"
+
+feature_values = np.linspace(
+    X[feature_to_analyze].min(),
+    X[feature_to_analyze].max(),
+    100
+)
+
+results = []
+
+for value in feature_values:
+    X_temp = X.copy()
+    X_temp[feature_to_analyze] = value
+    prediction = model.predict(X_temp)
+    results.append(np.mean(prediction))
+
+plt.figure(figsize=(10, 6))
+plt.plot(feature_values, results)
+plt.xlabel(feature_to_analyze)
+plt.ylabel("Average Predicted Happiness Score")
+plt.title(
+    f"Sensitivity Analysis of {feature_to_analyze} - "
+    f"{student_id} - {todays_date}"
+)
+plt.tight_layout()
+plt.show()
+
+### Step 4: Define the Optimization Problem - maxram3385 - 2026-10-26
+
+| Component | Description |
+|---|---|
+| Objective Function | Maximize the predicted happiness score. |
+| Decision Variables | The feature values used to predict the happiness score. Each feature value will be adjusted within its bounds to find the optimal combination. |
+| Constraints | The minimum and maximum values observed for each feature in the dataset. |
+| Optimization Method | L-BFGS-B, a quasi-Newton method designed for optimizing smooth functions with bounded variables. |
+
+# Step 5: Solve the Optimization Problem
+
+from scipy.optimize import minimize
+
+def objective_function(feature_values):
+    X_temp = X.copy()
+    X_temp.loc[:, X.columns] = feature_values
+    return -np.mean(model.predict(X_temp))
+
+bounds = [
+    (X[column].min(), X[column].max())
+    for column in X.columns
+]
+
+result = minimize(
+    objective_function,
+    x0=X.mean().values,
+    bounds=bounds,
+    method="L-BFGS-B"
+)
+
+display(Markdown(
+    f"### Step 5: Solve the Optimization Problem - "
+    f"{student_id} - {todays_date}"
+))
+
+display(Markdown("#### Optimal Feature Values:"))
+display(pd.DataFrame(
+    result.x,
+    index=X.columns,
+    columns=["Value"]
+))
+
+display(Markdown(
+    f"#### Optimal Happiness Score: {-result.fun}"
+))
+
+# Step 6: What-If Analysis
+
+adjusted_feature_values = X.mean().copy()
+adjusted_feature_values["GDP per capita"] += 0.1
+
+adjusted_feature_values_df = pd.DataFrame([adjusted_feature_values])
+
+adjusted_happiness_score = np.mean(
+    model.predict(adjusted_feature_values_df)
+)
+
+display(Markdown(
+    f"### Step 6: What-If Analysis - {student_id} - {todays_date}"
+))
+
+display(Markdown("#### Adjusted Feature Values:"))
+display(adjusted_feature_values)
+
+display(Markdown(
+    f"#### Adjusted Happiness Score: {adjusted_happiness_score}"
+))
+
+# Step 7: Evaluate Scenarios
+
+adjustments = {
+    "Scenario 1": {
+        "GDP per capita": 0.1,
+        "Social support": 0.1
+    },
+    "Scenario 2": {
+        "Healthy life expectancy": 0.1,
+        "Perceptions of corruption": -0.1
+    }
+}
+
+scenarios = {}
+
+for scenario, adjustment in adjustments.items():
+    adjusted_features = X.mean().copy()
+
+    for feature, change in adjustment.items():
+        adjusted_features[feature] += change
+
+    scenarios[scenario] = adjusted_features
+
+scenario_results = {}
+
+for scenario, feature_values in scenarios.items():
+    feature_values_df = pd.DataFrame([feature_values])
+    scenario_results[scenario] = np.mean(
+        model.predict(feature_values_df)
+    )
+
+display(Markdown(
+    f"### Step 7: Evaluate Scenarios - {student_id} - {todays_date}"
+))
+
+display(Markdown("#### Scenario Results:"))
+display(pd.Series(
+    scenario_results,
+    name="Happiness Score"
+))

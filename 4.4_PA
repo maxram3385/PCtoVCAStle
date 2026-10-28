@@ -220,7 +220,7 @@ display(Markdown(
 
 # Start again from the mean feature values
 adjusted_feature_values = X.mean().copy()
-adjusted_feature_values['number_of_reviews'] += 30
+adjusted_feature_values['availability_365'] += 50
 
 # Convert to DataFrame and predict price
 adjusted_feature_values_df = pd.DataFrame(
@@ -233,7 +233,7 @@ adjusted_price = np.mean(
 
 # Display header
 display(Markdown(
-    f"### Step 6C: What-If Analysis — Reviews +30 - "
+    f"### Step 6B: What-If Analysis — Availability +50 - "
     f"{student_id} - {todays_date}"
 ))
 

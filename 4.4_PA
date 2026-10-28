@@ -1,0 +1,345 @@
+import pandas as pd
+from datetime import datetime
+from IPython.display import display, Markdown
+
+# Load the dataset
+file_path = r'C:\Files\Excel\Prescriptive_PythonR\AirbnbListings_v4.xlsx'
+airbnb_df = pd.read_excel(file_path)
+
+# Display header
+todays_date = datetime.now().strftime("%Y-%m-%d")
+student_id = "maxram3385"
+
+display(Markdown(
+    f"### Step 1: Load and Explore the Dataset - "
+    f"{student_id} - {todays_date}"
+))
+
+# Display summary statistics
+display(Markdown("#### Summary Statistics"))
+display(airbnb_df.describe())
+
+# Check for null values
+display(Markdown("#### Original Null Values"))
+display(airbnb_df.isnull().sum())
+
+# Remove rows with missing target prices
+airbnb_df = airbnb_df.dropna(subset=['price']).copy()
+
+# Identify availability values outside the valid range
+invalid_availability = ~airbnb_df['availability_365'].between(0, 365)
+
+print("Invalid availability values:", invalid_availability.sum())
+
+# Replace invalid availability values with the valid median
+median_availability = airbnb_df.loc[
+    ~invalid_availability, 'availability_365'
+].median()
+
+airbnb_df.loc[
+    invalid_availability, 'availability_365'
+] = median_availability
+
+# Confirm cleaning
+display(Markdown("#### Null Values After Cleaning"))
+display(airbnb_df.isnull().sum())
+
+print("Median availability used:", median_availability)
+print("Rows remaining:", len(airbnb_df))
+
+#Step 2
+
+from sklearn.ensemble import RandomForestRegressor
+import matplotlib.pyplot as plt
+
+# Define features (X) and target (y)
+X = airbnb_df[
+    ['minimum_nights', 'number_of_reviews', 'availability_365']
+]
+y = airbnb_df['price']
+
+# Initialize and fit the Random Forest Regressor
+# A fixed random_state keeps results consistent between runs.
+model = RandomForestRegressor(random_state=42)
+model.fit(X, y)
+
+# Get feature importances
+importances = model.feature_importances_
+
+# Create a DataFrame for feature importances
+feature_importance_df = pd.DataFrame({
+    'Feature': X.columns,
+    'Importance': importances
+})
+
+# Sort by importance
+feature_importance_df = feature_importance_df.sort_values(
+    by='Importance',
+    ascending=False
+)
+
+# Display header and results
+display(Markdown(
+    f"### Step 2: Feature Importances - "
+    f"{student_id} - {todays_date}"
+))
+
+display(feature_importance_df)
+
+# Plot feature importances
+plt.figure(figsize=(10, 6))
+plt.barh(
+    feature_importance_df['Feature'],
+    feature_importance_df['Importance']
+)
+plt.xlabel('Importance')
+plt.title(f'Feature Importances - {student_id} - {todays_date}')
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()
+
+
+# step 3
+
+import numpy as np
+
+# Analyze each of the three required features
+for feature_to_analyze in X.columns:
+
+    # Create a range of values for the feature
+    feature_values = np.linspace(
+        min(X[feature_to_analyze]),
+        max(X[feature_to_analyze]),
+        100
+    )
+
+    results = []
+
+    # Perform sensitivity analysis
+    for value in feature_values:
+        X_temp = X.copy()
+        X_temp[feature_to_analyze] = value
+        prediction = model.predict(X_temp)
+        results.append(np.mean(prediction))
+
+    # Plot the results
+    plt.figure(figsize=(10, 6))
+    plt.plot(feature_values, results)
+    plt.xlabel(feature_to_analyze)
+    plt.ylabel('Average Predicted Price ($)')
+    plt.title(
+        f'Sensitivity Analysis of {feature_to_analyze}\n'
+        f'{student_id} - {todays_date}'
+    )
+    plt.tight_layout()
+    plt.show()
+
+    # step 4
+    # markdown
+
+    ### Step 4: Define the Optimization Problem - maxram3385 - 2026-10-28
+
+| Component | Description |
+|---|---|
+| Objective Function | Maximize the predicted Airbnb listing price. |
+| Decision Variables | minimum_nights, number_of_reviews, and availability_365. |
+| Constraints | Each feature must remain between its minimum and maximum values in the cleaned dataset. |
+| Optimization Method | L-BFGS-B, following the guided practice. |
+
+    #step 5
+
+from scipy.optimize import minimize
+
+# Define the objective function to be minimized
+def objective_function(feature_values):
+    X_temp = X.copy()
+    X_temp.loc[:, X.columns] = feature_values
+    return -np.mean(model.predict(X_temp))
+
+# Define bounds for the features
+bounds = [
+    (min(X[col]), max(X[col]))
+    for col in X.columns
+]
+
+# Solve the optimization problem
+result = minimize(
+    objective_function,
+    x0=X.mean().values,
+    bounds=bounds,
+    method='L-BFGS-B'
+)
+
+# Display header
+display(Markdown(
+    f"### Step 5: Solve the Optimization Problem - "
+    f"{student_id} - {todays_date}"
+))
+
+# Display optimal feature values and corresponding price
+display(Markdown("#### Optimal Feature Values"))
+display(pd.DataFrame(
+    result.x,
+    index=X.columns,
+    columns=['Value']
+))
+
+display(Markdown(
+    f"#### Optimal Predicted Price: ${-result.fun:.2f}"
+))
+
+# Step 6
+
+# Manually adjust feature values
+adjusted_feature_values = X.mean().copy()
+adjusted_feature_values['minimum_nights'] += 14
+
+# Convert to DataFrame and predict price
+adjusted_feature_values_df = pd.DataFrame(
+    [adjusted_feature_values]
+)
+
+adjusted_price = np.mean(
+    model.predict(adjusted_feature_values_df)
+)
+
+# Display header
+display(Markdown(
+    f"### Step 6A: What-If Analysis — Minimum Nights +14 - "
+    f"{student_id} - {todays_date}"
+))
+
+# Display adjusted values and predicted price
+display(Markdown("#### Adjusted Feature Values"))
+display(adjusted_feature_values)
+
+display(Markdown(
+    f"#### Adjusted Predicted Price: ${adjusted_price:.2f}"
+))
+
+# Step 7
+
+# Start again from the mean feature values
+adjusted_feature_values = X.mean().copy()
+adjusted_feature_values['number_of_reviews'] += 30
+
+# Convert to DataFrame and predict price
+adjusted_feature_values_df = pd.DataFrame(
+    [adjusted_feature_values]
+)
+
+adjusted_price = np.mean(
+    model.predict(adjusted_feature_values_df)
+)
+
+# Display header
+display(Markdown(
+    f"### Step 6C: What-If Analysis — Reviews +30 - "
+    f"{student_id} - {todays_date}"
+))
+
+# Display adjusted values and predicted price
+display(Markdown("#### Adjusted Feature Values"))
+display(adjusted_feature_values)
+
+display(Markdown(
+    f"#### Adjusted Predicted Price: ${adjusted_price:.2f}"
+))
+
+# Step 8
+
+# Start again from the mean feature values
+adjusted_feature_values = X.mean().copy()
+adjusted_feature_values['number_of_reviews'] += 30
+
+# Convert to DataFrame and predict price
+adjusted_feature_values_df = pd.DataFrame(
+    [adjusted_feature_values]
+)
+
+adjusted_price = np.mean(
+    model.predict(adjusted_feature_values_df)
+)
+
+# Display header
+display(Markdown(
+    f"### Step 6C: What-If Analysis — Reviews +30 - "
+    f"{student_id} - {todays_date}"
+))
+
+# Display adjusted values and predicted price
+display(Markdown("#### Adjusted Feature Values"))
+display(adjusted_feature_values)
+
+display(Markdown(
+    f"#### Adjusted Predicted Price: ${adjusted_price:.2f}"
+))
+
+# Step 9
+# Define the required values for each scenario
+scenario_settings = {
+    'A: 7 nights, 100 reviews': {
+        'minimum_nights': 7,
+        'number_of_reviews': 100
+    },
+    'B: 1 night, 10 reviews': {
+        'minimum_nights': 1,
+        'number_of_reviews': 10
+    },
+    'C: 2 nights, 100 days available': {
+        'minimum_nights': 2,
+        'availability_365': 100
+    },
+    'D: 14 nights, 300 days available': {
+        'minimum_nights': 14,
+        'availability_365': 300
+    },
+    'E: 300 days available, 5 reviews': {
+        'availability_365': 300,
+        'number_of_reviews': 5
+    },
+    'F: 100 days available, 200 reviews': {
+        'availability_365': 100,
+        'number_of_reviews': 200
+    }
+}
+
+# Apply scenario values to the mean feature values
+scenarios = {}
+
+for scenario, settings in scenario_settings.items():
+    adjusted_features = X.mean().copy()
+
+    for feature, value in settings.items():
+        adjusted_features[feature] = value
+
+    scenarios[scenario] = adjusted_features
+
+# Evaluate each scenario
+scenario_results = {}
+
+for scenario, feature_values in scenarios.items():
+    feature_values_df = pd.DataFrame([feature_values])
+
+    scenario_results[scenario] = np.mean(
+        model.predict(feature_values_df)
+    )
+
+# Display header
+display(Markdown(
+    f"### Step 7: Evaluate Scenarios - "
+    f"{student_id} - {todays_date}"
+))
+
+# Display scenario inputs
+display(Markdown("#### Scenario Feature Values"))
+display(pd.DataFrame(scenarios).T.round(2))
+
+# Display predicted prices
+display(Markdown("#### Scenario Results"))
+display(pd.Series(
+    scenario_results,
+    name='Predicted Price ($)'
+).round(2))
+
+    

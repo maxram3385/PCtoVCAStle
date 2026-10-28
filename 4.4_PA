@@ -152,7 +152,7 @@ from scipy.optimize import minimize
 
 # Define the objective function to be minimized
 def objective_function(feature_values):
-    X_temp = X.copy()
+    X_temp = X.astype(float).copy()
     X_temp.loc[:, X.columns] = feature_values
     return -np.mean(model.predict(X_temp))
 
@@ -187,7 +187,6 @@ display(pd.DataFrame(
 display(Markdown(
     f"#### Optimal Predicted Price: ${-result.fun:.2f}"
 ))
-
 # Step 6
 
 # Manually adjust feature values

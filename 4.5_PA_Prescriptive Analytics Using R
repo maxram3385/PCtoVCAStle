@@ -1,0 +1,396 @@
+# ============================================================
+# Load and Describe the Dataset
+# ============================================================
+
+library(readxl)
+library(IRdisplay)
+library(randomForest)
+library(ggplot2)
+library(stats)
+
+student_id <- "maxram3385"
+todays_date <- Sys.Date()
+
+file_path <- "C:/Files/Excel/Prescriptive_PythonR/AirbnbListings_v4.xlsx"
+airbnb_df <- as.data.frame(read_excel(file_path))
+
+display_markdown(sprintf(
+  "### Load and Describe the Dataset - %s - %s",
+  student_id, todays_date
+))
+
+# Summarize numeric columns, following the guided practice
+numeric_df <- airbnb_df[sapply(airbnb_df, is.numeric)]
+
+summary_df <- data.frame(
+  Feature = names(numeric_df),
+  Count = sapply(numeric_df, function(col) sum(!is.na(col))),
+  Mean = sapply(numeric_df, mean, na.rm = TRUE),
+  Std = sapply(numeric_df, sd, na.rm = TRUE),
+  Min = sapply(numeric_df, min, na.rm = TRUE),
+  Max = sapply(numeric_df, max, na.rm = TRUE)
+)
+
+display_markdown("#### Summary Statistics")
+print(summary_df, row.names = FALSE)
+
+display_markdown("#### Original Null Values")
+print(colSums(is.na(airbnb_df)))
+
+# Remove rows with missing target prices
+missing_prices <- sum(is.na(airbnb_df$price))
+airbnb_df <- airbnb_df[!is.na(airbnb_df$price), ]
+
+# Identify invalid availability values
+invalid_availability <- !is.na(airbnb_df$availability_365) &
+  (airbnb_df$availability_365 < 0 |
+   airbnb_df$availability_365 > 365)
+
+# Replace invalid values with the valid median
+median_availability <- median(
+  airbnb_df$availability_365[!invalid_availability],
+  na.rm = TRUE
+)
+
+airbnb_df$availability_365[invalid_availability] <- median_availability
+
+display_markdown("#### Data Cleaning Results")
+cat("Rows removed for missing price:", missing_prices, "\n")
+cat("Invalid availability values corrected:",
+    sum(invalid_availability), "\n")
+cat("Median availability used:", median_availability, "\n")
+cat("Rows remaining:", nrow(airbnb_df), "\n")
+
+display_markdown("#### Null Values After Cleaning")
+print(colSums(is.na(airbnb_df)))
+
+
+# ============================================================
+# Calculate Feature Importances
+# ============================================================
+
+# Define the three predictors and target
+X <- airbnb_df[, c(
+  "minimum_nights",
+  "number_of_reviews",
+  "availability_365"
+)]
+
+y <- airbnb_df$price
+
+# Fit the regression model
+set.seed(42)
+model <- randomForest(X, y)
+
+# Use the importance measure from the guided practice
+importances <- model$importance[, "IncNodePurity"]
+
+feature_importance_df <- data.frame(
+  Feature = names(importances),
+  Importance = as.numeric(importances)
+)
+
+feature_importance_df <- feature_importance_df[
+  order(-feature_importance_df$Importance),
+]
+
+display_markdown(sprintf(
+  "### Calculate Feature Importances - %s - %s",
+  student_id, todays_date
+))
+
+print(feature_importance_df, row.names = FALSE)
+
+
+# ============================================================
+# Graph Feature Importances
+# ============================================================
+
+importance_plot <- ggplot(
+  feature_importance_df,
+  aes(x = reorder(Feature, Importance), y = Importance)
+) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(
+    x = "Feature",
+    y = "Importance (IncNodePurity)",
+    title = sprintf(
+      "Feature Importances - %s - %s",
+      student_id, todays_date
+    )
+  )
+
+print(importance_plot)
+
+
+# ============================================================
+# Plot Feature Analysis for All Three Predictors
+# ============================================================
+
+for (feature_to_analyze in names(X)) {
+
+  # Create the range of values to analyze
+  feature_values <- seq(
+    min(X[[feature_to_analyze]]),
+    max(X[[feature_to_analyze]]),
+    length.out = 100
+  )
+
+  results <- vector("numeric", length = length(feature_values))
+
+  # Change one feature while preserving the other features
+  for (i in seq_along(feature_values)) {
+    X_temp <- X
+    X_temp[[feature_to_analyze]] <- feature_values[i]
+
+    prediction <- predict(model, X_temp)
+    results[i] <- mean(prediction)
+  }
+
+  sensitivity_df <- data.frame(
+    Feature_Value = feature_values,
+    Predicted_Price = results
+  )
+
+  sensitivity_plot <- ggplot(
+    sensitivity_df,
+    aes(x = Feature_Value, y = Predicted_Price)
+  ) +
+    geom_line(color = "blue") +
+    labs(
+      x = feature_to_analyze,
+      y = "Average Predicted Price ($)",
+      title = sprintf(
+        "Sensitivity Analysis of %s\n%s - %s",
+        feature_to_analyze, student_id, todays_date
+      )
+    )
+
+  print(sensitivity_plot)
+}
+
+
+# ============================================================
+# Find Optimal Feature Values and Associated Price
+# ============================================================
+
+# Define the objective function, following the guided practice
+objective_function <- function(feature_values) {
+  X_temp <- X
+
+  X_temp[] <- matrix(
+    feature_values,
+    nrow = nrow(X_temp),
+    ncol = ncol(X_temp),
+    byrow = TRUE
+  )
+
+  return(-mean(predict(model, X_temp)))
+}
+
+# Use the observed minimum and maximum feature values as bounds
+bounds <- matrix(
+  c(sapply(X, min), sapply(X, max)),
+  ncol = 2
+)
+
+# Optimize using the guided practice's method
+result <- optim(
+  par = as.numeric(colMeans(X)),
+  fn = objective_function,
+  lower = bounds[, 1],
+  upper = bounds[, 2],
+  method = "L-BFGS-B"
+)
+
+display_markdown(sprintf(
+  "### Optimal Feature Values and Associated Price - %s - %s",
+  student_id, todays_date
+))
+
+optimal_feature_values <- data.frame(
+  Feature = names(X),
+  Value = result$par
+)
+
+display_markdown("#### Optimal Feature Values")
+print(optimal_feature_values, row.names = FALSE)
+
+display_markdown(sprintf(
+  "#### Optimal Predicted Price: $%.2f",
+  -result$value
+))
+
+
+# ============================================================
+# What-If Analysis: Minimum Nights +14
+# ============================================================
+
+adjusted_feature_values <- colMeans(X)
+
+adjusted_feature_values["minimum_nights"] <-
+  adjusted_feature_values["minimum_nights"] + 14
+
+adjusted_feature_values_df <- as.data.frame(
+  t(adjusted_feature_values)
+)
+
+adjusted_price <- mean(
+  predict(model, adjusted_feature_values_df)
+)
+
+display_markdown(sprintf(
+  "### What-If Analysis: Minimum Nights +14 - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("#### Adjusted Feature Values")
+print(adjusted_feature_values)
+
+display_markdown(sprintf(
+  "#### Adjusted Predicted Price: $%.2f",
+  adjusted_price
+))
+
+
+# ============================================================
+# What-If Analysis: Availability +50
+# ============================================================
+
+# Begin again with the mean values
+adjusted_feature_values <- colMeans(X)
+
+adjusted_feature_values["availability_365"] <-
+  adjusted_feature_values["availability_365"] + 50
+
+adjusted_feature_values_df <- as.data.frame(
+  t(adjusted_feature_values)
+)
+
+adjusted_price <- mean(
+  predict(model, adjusted_feature_values_df)
+)
+
+display_markdown(sprintf(
+  "### What-If Analysis: Availability +50 - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("#### Adjusted Feature Values")
+print(adjusted_feature_values)
+
+display_markdown(sprintf(
+  "#### Adjusted Predicted Price: $%.2f",
+  adjusted_price
+))
+
+
+# ============================================================
+# What-If Analysis: Reviews +30
+# ============================================================
+
+# Begin again with the mean values
+adjusted_feature_values <- colMeans(X)
+
+adjusted_feature_values["number_of_reviews"] <-
+  adjusted_feature_values["number_of_reviews"] + 30
+
+adjusted_feature_values_df <- as.data.frame(
+  t(adjusted_feature_values)
+)
+
+adjusted_price <- mean(
+  predict(model, adjusted_feature_values_df)
+)
+
+display_markdown(sprintf(
+  "### What-If Analysis: Reviews +30 - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("#### Adjusted Feature Values")
+print(adjusted_feature_values)
+
+display_markdown(sprintf(
+  "#### Adjusted Predicted Price: $%.2f",
+  adjusted_price
+))
+
+
+# ============================================================
+# Evaluate the Six Required Scenarios
+# ============================================================
+
+# These are specified values, not increases.
+scenario_settings <- list(
+  "A: 7 nights, 100 reviews" = list(
+    minimum_nights = 7,
+    number_of_reviews = 100
+  ),
+  "B: 1 night, 10 reviews" = list(
+    minimum_nights = 1,
+    number_of_reviews = 10
+  ),
+  "C: 2 nights, 100 days available" = list(
+    minimum_nights = 2,
+    availability_365 = 100
+  ),
+  "D: 14 nights, 300 days available" = list(
+    minimum_nights = 14,
+    availability_365 = 300
+  ),
+  "E: 300 days available, 5 reviews" = list(
+    availability_365 = 300,
+    number_of_reviews = 5
+  ),
+  "F: 100 days available, 200 reviews" = list(
+    availability_365 = 100,
+    number_of_reviews = 200
+  )
+)
+
+# Hold unspecified features at their mean values
+scenarios <- list()
+
+for (scenario in names(scenario_settings)) {
+  adjusted_features <- colMeans(X)
+
+  for (feature in names(scenario_settings[[scenario]])) {
+    adjusted_features[feature] <-
+      scenario_settings[[scenario]][[feature]]
+  }
+
+  scenarios[[scenario]] <- adjusted_features
+}
+
+# Predict the price for each scenario
+scenario_results <- numeric(length(scenarios))
+names(scenario_results) <- names(scenarios)
+
+for (scenario in names(scenarios)) {
+  feature_values_df <- as.data.frame(
+    t(scenarios[[scenario]])
+  )
+
+  scenario_results[scenario] <- mean(
+    predict(model, feature_values_df)
+  )
+}
+
+display_markdown(sprintf(
+  "### Evaluate Six Scenarios - %s - %s",
+  student_id, todays_date
+))
+
+display_markdown("#### Scenario Feature Values")
+print(round(as.data.frame(do.call(rbind, scenarios)), 2))
+
+display_markdown("#### Scenario Results")
+
+scenario_results_df <- data.frame(
+  Scenario = names(scenario_results),
+  Predicted_Price = round(as.numeric(scenario_results), 2)
+)
+
+print(scenario_results_df, row.names = FALSE)

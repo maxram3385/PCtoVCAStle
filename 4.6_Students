@@ -10,12 +10,7 @@ df = pd.read_excel("StudentsPerformance.xlsx")
 display(df.head())
 
 
-### Step 2: Add Student ID and Date in a Markdown Cell
-
-# maxram3385 - 2026-10-31
-
-
-### Step 3: Convert Categorical Columns Using One-Hot Encoding
+### Step 2: Convert Categorical Columns Using One-Hot Encoding
 
 categorical_columns = [
     "gender",
@@ -36,7 +31,7 @@ encoded_df = pd.get_dummies(
 display(encoded_df.head())
 
 
-### Step 4: Split the Dataset into Training and Testing Sets
+### Step 3: Split the Dataset into Training and Testing Sets
 
 X = encoded_df.drop(columns=["math score"])
 y = encoded_df["math score"]
@@ -52,7 +47,7 @@ print("Training records:", len(X_train))
 print("Testing records:", len(X_test))
 
 
-### Step 5: Create and Train the Linear Regression Model
+### Step 4: Create and Train the Linear Regression Model
 
 model = LinearRegression()
 model.fit(X_train, y_train)
@@ -60,7 +55,7 @@ model.fit(X_train, y_train)
 print("Linear regression model trained.")
 
 
-### Step 6: Predict Math Scores and Evaluate the Model
+### Step 5: Predict Math Scores and Evaluate the Model
 
 y_pred = model.predict(X_test)
 
@@ -80,7 +75,7 @@ print(f"Mean Squared Error (MSE): {mse:.4f}")
 print(f"R-squared: {r_squared:.4f}")
 
 
-### Step 7: Examine the Model Coefficients
+### Step 6: Examine the Model Coefficients
 
 coefficients = pd.DataFrame({
     "Feature": X.columns,
@@ -117,8 +112,5 @@ categorical_coefficients = coefficients[
 
 print("\nCategorical feature with the largest absolute coefficient:")
 display(categorical_coefficients.head(1).round(4))
-
-
-### Step 8: Answer the Questions in Your Word Document
 
 # Use the evaluation metrics from Step 6 and coefficients from Step 7.

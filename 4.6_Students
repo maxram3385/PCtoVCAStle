@@ -112,5 +112,3 @@ categorical_coefficients = coefficients[
 
 print("\nCategorical feature with the largest absolute coefficient:")
 display(categorical_coefficients.head(1).round(4))
-
-# Use the evaluation metrics from Step 6 and coefficients from Step 7.

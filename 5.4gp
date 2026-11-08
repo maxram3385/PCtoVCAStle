@@ -1,0 +1,8 @@
+Price Tier =
+IF(ListingData[price] > 1200, BLANK(),
+    IF(ListingData[price] > 500, "Expensive",
+        IF(ListingData[price] > 250, "Standard Price",
+            IF(ListingData[price] > 0, "Inexpensive")
+        )
+    )
+)

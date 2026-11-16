@@ -12,7 +12,3 @@ INSERT INTO products (ProductNo, ProductId, ProductName, ProductDescription) VAL
 (3, '113', 'Tissue', 'Health'),
 (4, '114', 'Kibble', 'Pets'),
 (5, '115', 'Toothpaste', 'Health');
-
--- Read
-SELECT * FROM users
-SELECT * FROM products

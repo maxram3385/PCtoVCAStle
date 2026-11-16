@@ -1,4 +1,4 @@
--- Create
+
 INSERT INTO users (UserNo, UserId, LName, FName) VALUES
 (1, '001', 'Ramos', 'Max'),
 (2, '002', 'Smith', 'Jane'),

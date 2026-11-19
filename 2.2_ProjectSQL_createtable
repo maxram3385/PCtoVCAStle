@@ -1,0 +1,20 @@
+CREATE DATABASE IF NOT EXISTS music_store;
+
+USE music_store;
+
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(80) NOT NULL,
+    category VARCHAR(40) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    price DECIMAL(8, 2) NOT NULL
+);
+
+INSERT INTO products (product_id, product_name, category, description, price)
+VALUES
+    (101, 'Acoustic guitar', 'Instrument', 'Nylon-string classical guitar', 350.00),
+    (102, 'Microphone', 'Live sound', 'Handheld cardioid microphone', 100.00),
+    (103, 'Instrument cable', 'Accessories', '10-foot cable with XLR connectors on both ends', 20.00),
+    (104, 'Microphone stand', 'Accessories', 'Tripod microphone stand', 70.00);
+
+SELECT * FROM products ORDER BY product_id;

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Max Ramos Wk 2 Performance Assessment</title>
+</head>
+<body>
+    <form method="post">
+        <p><label><strong>Enter your name:</strong> <input type="text" name="name"></label></p>
+        <p><label><strong>Enter your birthdate:</strong> <input type="text" name="birthdate"></label></p>
+        <p><label><strong>Enter your favorite color:</strong> <input type="text" name="color"></label></p>
+        <p><label><strong>Enter your favorite place to visit:</strong> <input type="text" name="place"></label></p>
+        <p><label><strong>Enter your nickname:</strong> <input type="text" name="nickname"></label></p>
+        <button type="submit">Submit Values</button>
+    </form>
+
+    <?php
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $name = trim($_POST["name"] ?? "");
+        $birthdate = trim($_POST["birthdate"] ?? "");
+        $color = trim($_POST["color"] ?? "");
+        $place = trim($_POST["place"] ?? "");
+        $nickname = trim($_POST["nickname"] ?? "");
+
+        if ($name === "") {
+            echo "<p><strong>You didn't enter a name!</strong></p>";
+        } else {
+            echo "<p><strong>The name you entered is: " . htmlspecialchars($name) . "</strong></p>";
+        }
+
+        if ($birthdate === "") {
+            echo "<p><strong>You didn't enter a birthdate!</strong></p>";
+        } else {
+            echo "<p><strong>The birthdate you gave is: " . htmlspecialchars($birthdate) . "</strong></p>";
+        }
+
+        if ($color === "") {
+            echo "<p><strong>You didn't enter a favorite color!</strong></p>";
+        } else {
+            echo "<p><strong>You said your favorite color is: " . htmlspecialchars($color) . "</strong></p>";
+        }
+
+        if ($place === "") {
+            echo "<p><strong>You didn't enter a favorite place!</strong></p>";
+        } else {
+            echo "<p><strong>You said your favorite place is: " . htmlspecialchars($place) . "</strong></p>";
+        }
+
+        if ($nickname === "") {
+            echo "<p><strong>You didn't enter a nickname!</strong></p>";
+        } else {
+            echo "<p><strong>You said your nickname is: " . htmlspecialchars($nickname) . "</strong></p>";
+        }
+    }
+    ?>
+</body>
+</html>

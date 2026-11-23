@@ -46,16 +46,23 @@
 
 </html>
 
-
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Chrome",
-            "type": "chrome",
+            "name": "Listen for Xdebug",
+            "type": "php",
             "request": "launch",
-            "url": "http://localhost/sdc310_week2_gp1/input_output.php",
-            "webRoot": "${workspaceFolder}"
+            "port": 9003
+        },
+        {
+            "name": "Launch currently open script",
+            "type": "php",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${fileDirname}",
+            "port": 9003,
+            "runtimeExecutable": "c:\\xampp\\php\\php.exe"
         }
     ]
 }

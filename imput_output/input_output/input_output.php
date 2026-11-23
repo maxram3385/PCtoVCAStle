@@ -45,3 +45,17 @@
 </body>
 
 </html>
+
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost/sdc310_week2_gp1/input_output.php",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}
